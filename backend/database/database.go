@@ -3,6 +3,7 @@ package database
 import (
 	"backend/models"
 	"database/sql"
+	"net/mail"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -17,7 +18,7 @@ func InitDB() (err error) {
 	defer db.Close()
 
 	r := `CREATE TABLE IF NOT EXISTS clients (
-id TEXT PRIMARY KEY,
+uuid TEXT PRIMARY KEY,
 email TEXT NOT NULL UNIQUE,
 username TEXT,
 password TEXT
@@ -37,4 +38,8 @@ func AddClient(c models.Client) (err error) {
 
 	_, err = db.Exec(r, c.Uuid, c.Email.Address, c.Username, c.Password)
 	return err
+}
+
+func GetClient(email *mail.Address) (c *models.Client, err error) {
+	return
 }

@@ -96,3 +96,40 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 }
+
+func LogClientIn(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		fmt.Println("Wrong Request")
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		return
+	}
+
+	err := request.ParseForm()
+	if err != nil {
+		fmt.Println(err)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		return
+	}
+
+	client := models.Client{
+		Username: request.FormValue("username"),
+		Password: request.FormValue("password"),
+	}
+
+	if client.Username == "" || client.Password == "" {
+		fmt.Println("Empty credentials")
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		return
+	}
+
+	client.Email, err = mail.ParseAddress(request.FormValue("email"))
+	if err != nil {
+		fmt.Println(err)
+		writer.WriteHeader(http.StatusBadRequest)
+		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		return
+	}
+}

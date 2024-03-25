@@ -12,6 +12,7 @@ func main() {
 	})
 
 	mux.Handle("/static/js/", http.StripPrefix("/static/js/", http.FileServer(http.Dir("static/js"))))
+	mux.Handle("/static/css/", http.StripPrefix("/static/css/", http.FileServer(http.Dir("static/css"))))
 
 	server := http.Server{
 		Addr:    ":8080",
