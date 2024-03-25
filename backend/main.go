@@ -8,8 +8,7 @@ import (
 )
 
 func main() {
-
-	err := database.InitDB("data/database.sqlite")
+	err := database.InitDB()
 	if err != nil {
 		log.Println(err)
 		return
