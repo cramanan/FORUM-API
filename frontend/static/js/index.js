@@ -65,10 +65,23 @@ window.HandleRegisterSubmit = (event) => {
                 navigateTo("/");
                 return resp.json();
             }
-
-            throw new Error("Registration failed");
         })
         .then((data) => {
-            console.log(data);
+            document.getElementById("server-error").textContent = data.message;
+        });
+};
+
+window.HandleLoginSubmit = (event) => {
+    event.preventDefault();
+    const data = new FormData(event.target);
+    fetch("http://localhost:8081/login", { method: "post", body: data })
+        .then((resp) => {
+            if (resp.ok) {
+                navigateTo("/");
+            }
+            return resp.json();
+        })
+        .then((data) => {
+            document.getElementById("server-error").textContent = data.message;
         });
 };

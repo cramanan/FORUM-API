@@ -5,16 +5,8 @@ import (
 	"net/http"
 )
 
-var SERVERMESSAGES = map[int][]byte{
-	http.StatusInternalServerError: []byte("Internal Server Error"),
-	http.StatusBadRequest:          []byte("Bad Request"),
-	http.StatusOK:                  []byte("OK"),
-	http.StatusUnauthorized:        []byte("Unauthorized"),
-}
-
 type Response struct {
-	StatusCode int `json:"status"`
-	Header     http.Header
+	StatusCode int    `json:"status"`
 	Message    string `json:"message"`
 }
 

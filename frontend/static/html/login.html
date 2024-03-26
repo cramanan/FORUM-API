@@ -1,5 +1,6 @@
-<form action="http://localhost:8081/login" method="post">
+<form onsubmit="HandleLoginSubmit(event)">
     <h1>Login</h1>
+    <div id="server-error"></div>
     <label for="email">Email</label>
     <input type="text" id="email" name="email" />
     <label for="password">Password</label>

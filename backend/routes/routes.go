@@ -45,13 +45,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	var err error
-	// err := request.ParseForm()
-	// if err != nil {
-	// 	log.Println(err)
-	// 	resp.StatusCode = http.StatusBadRequest
-	// 	utils.SendResponse(writer, resp)
-	// 	return
-	// }
 
 	client := models.Client{
 		Username: request.FormValue("username"),
@@ -104,19 +97,14 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	resp := utils.Response{
 		StatusCode: http.StatusOK,
+		Message:    "OK",
 	}
 	if request.Method != http.MethodPost {
 		resp.StatusCode = http.StatusBadRequest
-		utils.SendResponse(writer, resp)
-		return
-	}
-
-	err := request.ParseForm()
-	if err != nil {
-		log.Println(err)
-		resp.StatusCode = http.StatusBadRequest
+		resp.Message = "Bad Request"
 		utils.SendResponse(writer, resp)
 		return
 	}
@@ -127,23 +115,24 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	if client.Password == "" {
 		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "Empty credentials"
 		utils.SendResponse(writer, resp)
 		return
 	}
-
+	var err error
 	client.Email, err = mail.ParseAddress(request.FormValue("email"))
 	if err != nil {
-		log.Println(err)
 		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "Invalid mail format"
 		utils.SendResponse(writer, resp)
 		return
 	}
 
 	comp, err := database.GetClientFromMail(client.Email)
 	if err != nil {
-		log.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			resp.StatusCode = http.StatusUnauthorized
+			resp.Message = "Invalid password or username"
 			utils.SendResponse(writer, resp)
 			return
 		}
@@ -154,8 +143,8 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(comp.Password), []byte(client.Password))
 	if err != nil {
-		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Invalid password or username"
 		utils.SendResponse(writer, resp)
 		return
 	}
