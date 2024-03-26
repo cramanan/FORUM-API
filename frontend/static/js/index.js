@@ -50,6 +50,24 @@ document.addEventListener("DOMContentLoaded", () => {
     router();
 });
 
-const socket = new WebSocket("ws://localhost:8081/");
-socket.onopen = () => console.log("connected");
-socket.onclose = () => console.log("disconnected");
+// const socket = new WebSocket("ws://localhost:8081/");
+// socket.onopen = () => console.log("connected");
+// socket.onclose = () => console.log("disconnected");
+
+//Login
+window.HandleRegisterSubmit = (e) => {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    fetch("http://localhost:8081/register", { method: "post", body: data })
+        .then((resp) => {
+            if (resp.ok) {
+                navigateTo("/");
+                return resp.json();
+            }
+
+            throw new Error("Registration failed");
+        })
+        .then((data) => {
+            console.log(data);
+        });
+};

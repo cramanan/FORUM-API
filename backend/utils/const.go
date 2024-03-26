@@ -13,7 +13,8 @@ var SERVERMESSAGES = map[int][]byte{
 }
 
 type Response struct {
-	StatusCode int    `json:"status"`
+	StatusCode int `json:"status"`
+	Header     http.Header
 	Message    string `json:"message"`
 }
 
