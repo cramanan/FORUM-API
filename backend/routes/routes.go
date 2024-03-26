@@ -92,7 +92,11 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 
 	err = database.AddClient(client)
 	if err != nil {
-		log.Println(err)
+		if err.Error() == "UNIQUE constraint failed: clients.email" {
+			resp.StatusCode = http.StatusConflict
+			utils.SendResponse(writer, resp)
+			return
+		}
 		resp.StatusCode = http.StatusInternalServerError
 		utils.SendResponse(writer, resp)
 		return
