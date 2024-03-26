@@ -21,6 +21,7 @@ func main() {
 		Addr:    ":8081",
 		Handler: mux,
 	}
+	log.Println("Backend Server up...")
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)

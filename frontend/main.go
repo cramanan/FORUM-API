@@ -18,6 +18,7 @@ func main() {
 		Addr:    ":8080",
 		Handler: mux,
 	}
+	log.Println("Frontend Server up...")
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatalln(err)
