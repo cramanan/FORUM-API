@@ -6,7 +6,7 @@ export default class extends AbstractView {
     }
 
     async getHtml() {
-        const html = await fetch("/static/html/home.html")
+        const html = await fetch("/static/html/index.html")
             .then((resp) => {
                 if (resp.ok) {
                     return resp.text();
@@ -19,5 +19,10 @@ export default class extends AbstractView {
             .catch((reason) => console.log(reason));
 
         return html;
+    }
+
+    setCSS() {
+        document.querySelector('link[rel="stylesheet"]').href =
+            "/static/css/index.css";
     }
 }

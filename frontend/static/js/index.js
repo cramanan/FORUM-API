@@ -56,9 +56,9 @@ document.addEventListener("DOMContentLoaded", () => {
 // socket.onclose = () => console.log("disconnected");
 
 //Login
-window.HandleRegisterSubmit = (e) => {
-    e.preventDefault();
-    const data = new FormData(e.target);
+window.HandleRegisterSubmit = (event) => {
+    event.preventDefault();
+    const data = new FormData(event.target);
     fetch("http://localhost:8081/register", { method: "post", body: data })
         .then((resp) => {
             if (resp.ok) {
