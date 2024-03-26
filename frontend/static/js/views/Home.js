@@ -6,7 +6,7 @@ export default class extends AbstractView {
     }
 
     async getHtml() {
-        const html = await fetch("/static/js/templates/home.html")
+        const html = await fetch("/static/html/home.html")
             .then((resp) => {
                 if (resp.ok) {
                     return resp.text();

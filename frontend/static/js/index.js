@@ -35,6 +35,7 @@ const router = async () => {
         };
     }
     const view = new match.route.view();
+    view.setCSS();
     document.getElementById("root").innerHTML = await view.getHtml();
 };
 

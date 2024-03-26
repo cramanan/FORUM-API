@@ -11,8 +11,7 @@ func main() {
 		http.ServeFile(w, r, "index.html")
 	})
 
-	mux.Handle("/static/js/", http.StripPrefix("/static/js/", http.FileServer(http.Dir("static/js"))))
-	mux.Handle("/static/css/", http.StripPrefix("/static/css/", http.FileServer(http.Dir("static/css"))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	server := http.Server{
 		Addr:    ":8080",
