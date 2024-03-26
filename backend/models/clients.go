@@ -21,3 +21,18 @@ func (c Client) String() string {
 		c.Username,
 		c.Password)
 }
+
+// type RawClient struct {
+// 	Uuid     string
+// 	Email    string
+// 	Username string
+// 	Password string
+// }
+
+// func (c Client) toRaw() (rc RawClient) {
+// 	rc.Uuid = c.String()
+// 	rc.Email = c.Email.Address
+// 	rc.Username = c.Username
+// 	rc.Password = c.Password
+// 	return rc
+// }

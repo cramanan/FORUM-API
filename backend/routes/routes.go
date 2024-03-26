@@ -4,7 +4,8 @@ import (
 	"backend/database"
 	"backend/models"
 	"backend/utils"
-	"fmt"
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"net/mail"
@@ -21,7 +22,6 @@ var Upgrader = websocket.Upgrader{
 }
 
 func BasicUpgrade(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Add("Content-Type", "application/json")
 	_, err := Upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Println(err)
@@ -29,24 +29,24 @@ func BasicUpgrade(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	for {
-
 	}
 
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
+	resp := utils.Response{
+		StatusCode: http.StatusOK,
+	}
 	if request.Method != http.MethodPost {
-		fmt.Println("Wrong Request")
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusBadRequest
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusBadRequest
+		utils.SendResponse(writer, resp)
 		return
 	}
 
@@ -56,33 +56,29 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if client.Username == "" || client.Password == "" {
-		fmt.Println("Empty credentials")
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusUnauthorized
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	client.Email, err = mail.ParseAddress(request.FormValue("email"))
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusUnauthorized
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	client.Uuid, err = uuid.NewV4()
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write(utils.SERVERMESSAGES[http.StatusInternalServerError])
+		resp.StatusCode = http.StatusInternalServerError
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	crypt, err := bcrypt.GenerateFromPassword([]byte(client.Password), 11)
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write(utils.SERVERMESSAGES[http.StatusInternalServerError])
+		resp.StatusCode = http.StatusInternalServerError
+		utils.SendResponse(writer, resp)
 		return
 	}
 
@@ -90,46 +86,62 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 
 	err = database.AddClient(client)
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write(utils.SERVERMESSAGES[http.StatusInternalServerError])
+		resp.StatusCode = http.StatusInternalServerError
+		utils.SendResponse(writer, resp)
 		return
 	}
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
+	resp := utils.Response{
+		StatusCode: http.StatusOK,
+	}
 	if request.Method != http.MethodPost {
-		fmt.Println("Wrong Request")
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusBadRequest
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusBadRequest
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	client := models.Client{
-		Username: request.FormValue("username"),
 		Password: request.FormValue("password"),
 	}
 
-	if client.Username == "" || client.Password == "" {
-		fmt.Println("Empty credentials")
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+	if client.Password == "" {
+		resp.StatusCode = http.StatusUnauthorized
+		utils.SendResponse(writer, resp)
 		return
 	}
 
 	client.Email, err = mail.ParseAddress(request.FormValue("email"))
 	if err != nil {
-		fmt.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write(utils.SERVERMESSAGES[http.StatusBadRequest])
+		resp.StatusCode = http.StatusUnauthorized
+		utils.SendResponse(writer, resp)
+		return
+	}
+
+	comp, err := database.GetClientFromMail(client.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			resp.StatusCode = http.StatusUnauthorized
+			utils.SendResponse(writer, resp)
+			return
+		}
+		resp.StatusCode = http.StatusInternalServerError
+		utils.SendResponse(writer, resp)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(comp.Password), []byte(client.Password))
+	if err != nil {
+		resp.StatusCode = http.StatusInternalServerError
+		utils.SendResponse(writer, resp)
 		return
 	}
 }

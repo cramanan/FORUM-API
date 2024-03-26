@@ -17,6 +17,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", routes.BasicUpgrade)
 	mux.HandleFunc("/register", routes.RegisterClient)
+	mux.HandleFunc("/login", routes.LogClientIn)
 	server := http.Server{
 		Addr:    ":8081",
 		Handler: mux,

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"net/mail"
 
+	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -40,6 +41,31 @@ func AddClient(c models.Client) (err error) {
 	return err
 }
 
-func GetClient(email *mail.Address) (c *models.Client, err error) {
-	return
+func GetClientFromMail(email *mail.Address) (c *models.Client, err error) {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	r := "SELECT uuid, email, username, password FROM clients WHERE email = ?;"
+	row := db.QueryRow(r, email.Address)
+	var id, str_mail string
+	c = &models.Client{}
+	err = row.Scan(&id, &str_mail, &c.Username, &c.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	c.Uuid, err = uuid.FromString(id)
+	if err != nil {
+		return nil, err
+	}
+
+	c.Email, err = mail.ParseAddress(str_mail)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, err
 }
