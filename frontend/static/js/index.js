@@ -63,8 +63,8 @@ window.HandleRegisterSubmit = (event) => {
         .then((resp) => {
             if (resp.ok) {
                 navigateTo("/");
-                return resp.json();
             }
+            return resp.json();
         })
         .then((data) => {
             document.getElementById("server-error").textContent = data.message;
@@ -83,5 +83,6 @@ window.HandleLoginSubmit = (event) => {
         })
         .then((data) => {
             document.getElementById("server-error").textContent = data.message;
-        });
+        })
+        .catch(() => {});
 };
