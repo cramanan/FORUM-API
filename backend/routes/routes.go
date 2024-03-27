@@ -3,11 +3,13 @@ package routes
 import (
 	"backend/database"
 	"backend/models"
+	"backend/utils"
 	"database/sql"
 	"errors"
 	"log"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
@@ -104,7 +106,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
-
 	resp := models.Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
@@ -156,5 +157,23 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	_, ok := utils.Store.Sessions[client.Uuid.String()]
+	if ok {
+		resp.StatusCode = http.StatusConflict
+		resp.Message = "User is already active"
+		models.SendResponse(writer, resp)
+		return
+	}
+
+	session := models.NewSession()
+	utils.Store.Sessions[client.Uuid.String()] = session
+	cookie := http.Cookie{
+		Name:     "session",
+		Value:    session.ID,
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true,
+	}
+
+	http.SetCookie(writer, &cookie)
 	models.SendResponse(writer, resp)
 }
