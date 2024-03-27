@@ -8,6 +8,7 @@ import (
 type Response struct {
 	StatusCode int    `json:"status"`
 	Message    string `json:"message"`
+	Data       map[string]interface{}
 }
 
 func SendResponse(w http.ResponseWriter, r Response) (err error) {

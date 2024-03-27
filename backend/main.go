@@ -9,6 +9,10 @@ import (
 	"net/http"
 )
 
+func init() {
+	utils.Store = models.NewStore()
+}
+
 func main() {
 	err := database.InitDB()
 	if err != nil {
@@ -16,10 +20,8 @@ func main() {
 		return
 	}
 
-	utils.Store = models.NewStore()
-
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", routes.BasicUpgrade)
+	mux.HandleFunc("/", routes.Root)
 	mux.HandleFunc("/register", routes.RegisterClient)
 	mux.HandleFunc("/login", routes.LogClientIn)
 	server := http.Server{

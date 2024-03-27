@@ -11,26 +11,11 @@ import (
 	"net/mail"
 
 	"github.com/gofrs/uuid"
-	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var Upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
+func Root(writer http.ResponseWriter, request *http.Request) {
 
-func BasicUpgrade(writer http.ResponseWriter, request *http.Request) {
-	_, err := Upgrader.Upgrade(writer, request, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	for {
-
-	}
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
@@ -157,7 +142,9 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	_, ok := utils.Store.Sessions.Load((*comp).Uuid.String())
+	client = *comp
+
+	_, ok := utils.Store.Map.Load(client.Uuid.String())
 	if ok {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "User is already active"
@@ -167,7 +154,6 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	session := models.NewSession(*comp)
 	http.SetCookie(writer, session.Cookie)
-	utils.Store.Sessions.Store((*comp).Uuid.String(), session)
-
+	utils.Store.Map.Store((*comp).Uuid.String(), session)
 	models.SendResponse(writer, resp)
 }

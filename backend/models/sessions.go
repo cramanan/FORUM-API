@@ -42,28 +42,28 @@ func NewSession(c Client) (session *Session) {
 }
 
 type SessionStore struct {
-	Sessions sync.Map // preferably map[string]*Session
-	Timeout  time.Duration
+	sync.Map // preferably map[string]*Session
+	timeout  time.Duration
 }
 
 func NewStore() (store *SessionStore) {
 	store = new(SessionStore)
-	store.Timeout = 10 * time.Second
-	go store.TimeOutCycle()
+	store.timeout = 10 * time.Second
+	go store.timeOutCycle()
 	return store
 }
 
-func (store *SessionStore) TimeOutCycle() {
+func (store *SessionStore) timeOutCycle() {
 	for {
-		time.Sleep(store.Timeout)
-		store.Sessions.Range(func(key, value any) bool {
+		time.Sleep(store.timeout)
+		store.Map.Range(func(key, value any) bool {
 			session, ok := value.(*Session)
 			if !ok {
 				return false
 			}
 
 			if session.Cookie.Expires.Before(time.Now()) {
-				store.Sessions.Delete(key)
+				store.Map.Delete(key)
 			}
 			fmt.Println(key)
 			return true
