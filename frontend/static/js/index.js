@@ -75,7 +75,11 @@ window.HandleRegisterSubmit = (event) => {
 window.HandleLoginSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
-    fetch("http://localhost:8081/login", { method: "post", body: data })
+    fetch("http://localhost:8081/login", {
+        method: "post",
+        body: data,
+        credentials: "include",
+    })
         .then((resp) => {
             if (resp.ok) {
                 navigateTo("/");
