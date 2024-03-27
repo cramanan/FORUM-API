@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // socket.onopen = () => console.log("connected");
 // socket.onclose = () => console.log("disconnected");
 
-//Login
+// Register
 window.HandleRegisterSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
@@ -71,6 +71,7 @@ window.HandleRegisterSubmit = (event) => {
         });
 };
 
+//Login
 window.HandleLoginSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);

@@ -2,7 +2,9 @@ package main
 
 import (
 	"backend/database"
+	"backend/models"
 	"backend/routes"
+	"backend/utils"
 	"log"
 	"net/http"
 )
@@ -13,6 +15,8 @@ func main() {
 		log.Println(err)
 		return
 	}
+
+	utils.Store = models.NewStore()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", routes.BasicUpgrade)

@@ -3,7 +3,6 @@ package routes
 import (
 	"backend/database"
 	"backend/models"
-	"backend/utils"
 	"database/sql"
 	"errors"
 	"log"
@@ -29,20 +28,20 @@ func BasicUpgrade(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	for {
-	}
 
+	}
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
-	resp := utils.Response{
+	resp := models.Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
 	if request.Method != http.MethodPost {
 		resp.StatusCode = http.StatusBadRequest
 		resp.Message = "Bad Request"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 	var err error
@@ -55,7 +54,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	if client.Username == "" || client.Password == "" {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty Credentials"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -64,7 +63,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid Email format"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -73,7 +72,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Something Went Wrong :/ Try again later."
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -82,7 +81,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Something Went Wrong :/ Try again later."
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -93,25 +92,27 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		if err.Error() == "UNIQUE constraint failed: clients.email" {
 			resp.StatusCode = http.StatusConflict
 			resp.Message = "Email adress already taken"
-			utils.SendResponse(writer, resp)
+			models.SendResponse(writer, resp)
 			return
 		}
 		resp.StatusCode = http.StatusInternalServerError
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
+
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
-	resp := utils.Response{
+
+	resp := models.Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
 	if request.Method != http.MethodPost {
 		resp.StatusCode = http.StatusBadRequest
 		resp.Message = "Bad Request"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -122,7 +123,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if client.Password == "" {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty credentials"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 	var err error
@@ -130,7 +131,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid mail format"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -139,11 +140,11 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			resp.StatusCode = http.StatusUnauthorized
 			resp.Message = "Invalid password or username"
-			utils.SendResponse(writer, resp)
+			models.SendResponse(writer, resp)
 			return
 		}
 		resp.StatusCode = http.StatusInternalServerError
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
@@ -151,9 +152,9 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Invalid password or username"
-		utils.SendResponse(writer, resp)
+		models.SendResponse(writer, resp)
 		return
 	}
 
-	utils.SendResponse(writer, resp)
+	models.SendResponse(writer, resp)
 }
