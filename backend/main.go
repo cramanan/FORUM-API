@@ -2,16 +2,10 @@ package main
 
 import (
 	"backend/database"
-	"backend/models"
 	"backend/routes"
-	"backend/utils"
 	"log"
 	"net/http"
 )
-
-func init() {
-	utils.Store = models.NewStore()
-}
 
 func main() {
 	err := database.InitDB()

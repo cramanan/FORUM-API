@@ -3,7 +3,6 @@ package routes
 import (
 	"backend/database"
 	"backend/models"
-	"backend/utils"
 	"database/sql"
 	"errors"
 	"log"
@@ -86,6 +85,9 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	models.Session(writer, request)
+	err = models.SendResponse(writer, resp)
+	log.Println(err)
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
@@ -143,17 +145,6 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client = *comp
-
-	_, ok := utils.Store.Map.Load(client.Uuid.String())
-	if ok {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "User is already active"
-		models.SendResponse(writer, resp)
-		return
-	}
-
-	session := models.NewSession(*comp)
-	http.SetCookie(writer, session.Cookie)
-	utils.Store.Map.Store((*comp).Uuid.String(), session)
+	models.Session(writer, request)
 	models.SendResponse(writer, resp)
 }

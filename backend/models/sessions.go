@@ -8,9 +8,18 @@ import (
 	"time"
 )
 
+var (
+	store            = new_session_store()
+	SessionsIdLenght = 10
+	SessionTimeout   = time.Hour
+)
+
+const (
+	COOKIENAME = "session-id"
+)
+
 func generate_id_64(lenght int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-")
-
 	s := make([]rune, lenght)
 	for i := range s {
 		s[i] = letters[rand.Intn(len(letters))]
@@ -18,56 +27,62 @@ func generate_id_64(lenght int) string {
 	return string(s)
 }
 
-type Session struct {
-	ID     string
-	Client Client
-	Cookie *http.Cookie
-	Values map[interface{}]interface{}
-}
-
-func NewSession(c Client) (session *Session) {
-	session = new(Session)
-	session.ID = generate_id_64(16)
-	session.Client = c
-	session.Cookie = &http.Cookie{
-		Name:     "session",
-		Value:    session.ID,
-		Expires:  time.Now().Add(3 * time.Hour),
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
-		Path:     "/",
-		HttpOnly: false,
-	}
-	return session
-}
-
-type SessionStore struct {
-	sync.Map // preferably map[string]*Session
+type session_store struct {
+	sync.Map // Preferably map[string]*session
 	timeout  time.Duration
 }
 
-func NewStore() (store *SessionStore) {
-	store = new(SessionStore)
-	store.timeout = 10 * time.Second
-	go store.timeOutCycle()
-	return store
+func new_session_store() (st *session_store) {
+	st = new(session_store)
+	st.timeout = SessionTimeout
+	go st.timeout_cycle()
+	return st
 }
 
-func (store *SessionStore) timeOutCycle() {
+func (st *session_store) timeout_cycle() {
 	for {
-		time.Sleep(store.timeout)
-		store.Map.Range(func(key, value any) bool {
-			session, ok := value.(*Session)
-			if !ok {
-				return false
-			}
-
-			if session.Cookie.Expires.Before(time.Now()) {
-				store.Map.Delete(key)
-			}
-			fmt.Println(key)
+		time.Sleep(st.timeout)
+		st.Map.Range(func(key, value any) bool {
+			fmt.Println(key, value)
 			return true
 		})
 
 	}
+}
+
+type Sessions struct {
+	sync.Map
+}
+
+func Session(w http.ResponseWriter, r *http.Request) (sess *Sessions) {
+	cookie, _ := r.Cookie(COOKIENAME)
+	sess = new(Sessions)
+	if cookie != nil {
+		sess_any, ok := store.Map.Load(cookie.Value)
+		if !ok {
+			return sess
+		}
+		sess = sess_any.(*Sessions)
+	} else {
+		sessid := generate_id_64(SessionsIdLenght)
+		http.SetCookie(w, &http.Cookie{
+			Name:     COOKIENAME,
+			Value:    sessid,
+			Expires:  time.Now().Add(SessionTimeout),
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+			Path:     "/",
+			HttpOnly: false,
+		})
+		store.Map.Store(sessid, sess)
+	}
+	return sess
+}
+
+func (sess *Sessions) Store(key any, value any) {
+	sess.Map.Store(key, value)
+}
+
+func (sess *Sessions) Load(key any) {
+	sess.Map.Load(key)
 }
