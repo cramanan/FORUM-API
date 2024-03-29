@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -85,7 +86,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	models.Session(writer, request)
 	err = models.SendResponse(writer, resp)
 	log.Println(err)
 }
@@ -145,6 +145,8 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client = *comp
-	models.Session(writer, request)
+	sess := database.NewSession(writer, request)
+	sess.Set("username", client.Username)
+	fmt.Println(sess.Get("username"))
 	models.SendResponse(writer, resp)
 }
