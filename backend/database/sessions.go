@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"sync"
@@ -10,7 +11,7 @@ import (
 var (
 	private_store  = new_store()
 	CookieValue    = "session-id"
-	SessionTimeout = 10 * time.Second
+	SessionTimeout = 3 * time.Hour
 )
 
 func generate_id_64(lenght int) string {
@@ -28,10 +29,11 @@ type Session struct {
 	values map[any]any
 }
 
-func (sess *Session) Get(key any) any {
+func (sess *Session) Get(key any) (value any, ok bool) {
 	sess.mx.RLock()
 	defer sess.mx.RUnlock()
-	return sess.values[key]
+	value, ok = sess.values[key]
+	return value, ok
 }
 
 func (sess *Session) Set(key any, value any) {
@@ -47,10 +49,12 @@ type session_store struct {
 
 func (st *session_store) timeout_cycle() {
 	for {
+		time.Sleep(SessionTimeout)
 		for key, sess := range st.sessions {
 			if sess.cookie.Expires.Before(time.Now()) {
 				st.mx.Lock()
 				delete(st.sessions, key)
+				fmt.Println("Deleted", key)
 				st.mx.Unlock()
 			}
 		}
@@ -66,7 +70,7 @@ func new_store() *session_store {
 
 func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	s = new(Session)
-	sessid := generate_id_64(10)
+	sessid := generate_id_64(16)
 	s.cookie = http.Cookie{
 		Name:     CookieValue,
 		Value:    sessid,
@@ -93,4 +97,8 @@ func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	private_store.sessions[sessid] = s
 	private_store.mx.Unlock()
 	return s
+}
+
+func (sess *Session) End() {
+	sess.cookie.Expires = time.Now()
 }

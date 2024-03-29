@@ -5,7 +5,6 @@ import (
 	"backend/models"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -146,7 +145,21 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	client = *comp
 	sess := database.NewSession(writer, request)
+
+	if _, ok := sess.Get("username"); ok {
+		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "User is already active"
+		models.SendResponse(writer, resp)
+		return
+	}
+
+	if _, ok := sess.Get("password"); ok {
+		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "User is already active"
+		models.SendResponse(writer, resp)
+		return
+	}
 	sess.Set("username", client.Username)
-	fmt.Println(sess.Get("username"))
+	sess.Set("password", client.Password)
 	models.SendResponse(writer, resp)
 }
