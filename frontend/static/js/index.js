@@ -34,6 +34,7 @@ const router = async () => {
             isMatch: false,
         };
     }
+
     const view = new match.route.view();
     view.setCSS();
     document.getElementById("root").innerHTML = await view.getHtml();
@@ -50,10 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     router();
 });
-
-// const socket = new WebSocket("ws://localhost:8081/");
-// socket.onopen = () => console.log("connected");
-// socket.onclose = () => console.log("disconnected");
 
 // Register
 window.HandleRegisterSubmit = (event) => {

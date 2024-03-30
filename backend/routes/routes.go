@@ -14,7 +14,13 @@ import (
 )
 
 func Root(writer http.ResponseWriter, request *http.Request) {
-
+	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	resp := models.Response{
+		StatusCode: http.StatusUnauthorized,
+		Message:    "OK",
+	}
+	models.SendResponse(writer, resp)
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
@@ -85,6 +91,23 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	sess := database.NewSession(writer, request)
+
+	// if _, ok := sess.Get("username"); ok {
+	// 	resp.StatusCode = http.StatusUnauthorized
+	// 	resp.Message = "User is already active"
+	// 	models.SendResponse(writer, resp)
+	// 	return
+	// }
+
+	// if _, ok := sess.Get("password"); ok {
+	// 	resp.StatusCode = http.StatusUnauthorized
+	// 	resp.Message = "User is already active"
+	// 	models.SendResponse(writer, resp)
+	// 	return
+	// }
+	sess.Set("username", client.Username)
+	sess.Set("password", client.Password)
 	err = models.SendResponse(writer, resp)
 	log.Println(err)
 }
@@ -146,19 +169,19 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	client = *comp
 	sess := database.NewSession(writer, request)
 
-	if _, ok := sess.Get("username"); ok {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "User is already active"
-		models.SendResponse(writer, resp)
-		return
-	}
+	// if _, ok := sess.Get("username"); ok {
+	// 	resp.StatusCode = http.StatusUnauthorized
+	// 	resp.Message = "User is already active"
+	// 	models.SendResponse(writer, resp)
+	// 	return
+	// }
 
-	if _, ok := sess.Get("password"); ok {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "User is already active"
-		models.SendResponse(writer, resp)
-		return
-	}
+	// if _, ok := sess.Get("password"); ok {
+	// 	resp.StatusCode = http.StatusUnauthorized
+	// 	resp.Message = "User is already active"
+	// 	models.SendResponse(writer, resp)
+	// 	return
+	// }
 	sess.Set("username", client.Username)
 	sess.Set("password", client.Password)
 	models.SendResponse(writer, resp)

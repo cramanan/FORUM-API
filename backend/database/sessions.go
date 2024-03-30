@@ -26,20 +26,59 @@ func generate_id_64(lenght int) string {
 type Session struct {
 	mx     sync.RWMutex
 	cookie http.Cookie
-	values map[any]any
+	values map[string]any
 }
 
-func (sess *Session) Get(key any) (value any, ok bool) {
+func (sess *Session) Get(key string) (value any, ok bool) {
 	sess.mx.RLock()
 	defer sess.mx.RUnlock()
 	value, ok = sess.values[key]
 	return value, ok
 }
 
-func (sess *Session) Set(key any, value any) {
+func (sess *Session) Set(key string, value any) {
 	sess.mx.Lock()
 	defer sess.mx.Unlock()
 	sess.values[key] = value
+}
+
+func (sess *Session) Values() map[string]any {
+	return sess.values
+}
+
+func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
+	s = new(Session)
+	sessid := generate_id_64(16)
+	s.cookie = http.Cookie{
+		Name:     CookieValue,
+		Value:    sessid,
+		Expires:  time.Now().Add(SessionTimeout),
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
+		Path:     "/",
+		HttpOnly: false,
+	}
+	s.values = make(map[string]any)
+
+	cookie, _ := r.Cookie(CookieValue)
+	if cookie != nil {
+		private_store.mx.RLock()
+		sx, ok := private_store.sessions[cookie.Value]
+		private_store.mx.RUnlock()
+		if ok {
+			return sx
+		}
+
+	}
+	http.SetCookie(w, &s.cookie)
+	private_store.mx.Lock()
+	private_store.sessions[sessid] = s
+	private_store.mx.Unlock()
+	return s
+}
+
+func (sess *Session) End() {
+	sess.cookie.Expires = time.Now()
 }
 
 type session_store struct {
@@ -66,39 +105,4 @@ func new_store() *session_store {
 	store.sessions = make(map[string]*Session)
 	go store.timeout_cycle()
 	return store
-}
-
-func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
-	s = new(Session)
-	sessid := generate_id_64(16)
-	s.cookie = http.Cookie{
-		Name:     CookieValue,
-		Value:    sessid,
-		Expires:  time.Now().Add(SessionTimeout),
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
-		Path:     "/",
-		HttpOnly: false,
-	}
-	s.values = make(map[any]any)
-
-	cookie, _ := r.Cookie(CookieValue)
-	if cookie != nil {
-		private_store.mx.RLock()
-		sx, ok := private_store.sessions[cookie.Value]
-		private_store.mx.RUnlock()
-		if ok {
-			return sx
-		}
-
-	}
-	http.SetCookie(w, &s.cookie)
-	private_store.mx.Lock()
-	private_store.sessions[sessid] = s
-	private_store.mx.Unlock()
-	return s
-}
-
-func (sess *Session) End() {
-	sess.cookie.Expires = time.Now()
 }
