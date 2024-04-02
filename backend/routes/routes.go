@@ -16,23 +16,24 @@ import (
 func Root(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	resp := models.Response{
-		StatusCode: http.StatusUnauthorized,
+	resp := Response{
+		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
-	models.SendResponse(writer, resp)
+	err := SendResponse(writer, resp)
+	log.Println(err)
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
-	resp := models.Response{
+	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
 	if request.Method != http.MethodPost {
 		resp.StatusCode = http.StatusBadRequest
 		resp.Message = "Bad Request"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 	var err error
@@ -45,7 +46,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	if client.Username == "" || client.Password == "" {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty Credentials"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -54,7 +55,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid Email format"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -63,7 +64,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Something Went Wrong :/ Try again later."
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -72,7 +73,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Something Went Wrong :/ Try again later."
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -83,11 +84,11 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		if err.Error() == "UNIQUE constraint failed: clients.email" {
 			resp.StatusCode = http.StatusConflict
 			resp.Message = "Email adress already taken"
-			models.SendResponse(writer, resp)
+			SendResponse(writer, resp)
 			return
 		}
 		resp.StatusCode = http.StatusInternalServerError
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -96,33 +97,33 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	// if _, ok := sess.Get("username"); ok {
 	// 	resp.StatusCode = http.StatusUnauthorized
 	// 	resp.Message = "User is already active"
-	// 	models.SendResponse(writer, resp)
+	// 	SendResponse(writer, resp)
 	// 	return
 	// }
 
 	// if _, ok := sess.Get("password"); ok {
 	// 	resp.StatusCode = http.StatusUnauthorized
 	// 	resp.Message = "User is already active"
-	// 	models.SendResponse(writer, resp)
+	// 	SendResponse(writer, resp)
 	// 	return
 	// }
 	sess.Set("username", client.Username)
 	sess.Set("password", client.Password)
-	err = models.SendResponse(writer, resp)
+	err = SendResponse(writer, resp)
 	log.Println(err)
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	resp := models.Response{
+	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
 	if request.Method != http.MethodPost {
 		resp.StatusCode = http.StatusBadRequest
 		resp.Message = "Bad Request"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -133,7 +134,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if client.Password == "" {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty credentials"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 	var err error
@@ -141,7 +142,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid mail format"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -150,11 +151,11 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			resp.StatusCode = http.StatusUnauthorized
 			resp.Message = "Invalid password or username"
-			models.SendResponse(writer, resp)
+			SendResponse(writer, resp)
 			return
 		}
 		resp.StatusCode = http.StatusInternalServerError
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -162,7 +163,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Invalid password or username"
-		models.SendResponse(writer, resp)
+		SendResponse(writer, resp)
 		return
 	}
 
@@ -172,17 +173,17 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	// if _, ok := sess.Get("username"); ok {
 	// 	resp.StatusCode = http.StatusUnauthorized
 	// 	resp.Message = "User is already active"
-	// 	models.SendResponse(writer, resp)
+	// 	SendResponse(writer, resp)
 	// 	return
 	// }
 
 	// if _, ok := sess.Get("password"); ok {
 	// 	resp.StatusCode = http.StatusUnauthorized
 	// 	resp.Message = "User is already active"
-	// 	models.SendResponse(writer, resp)
+	// 	SendResponse(writer, resp)
 	// 	return
 	// }
 	sess.Set("username", client.Username)
 	sess.Set("password", client.Password)
-	models.SendResponse(writer, resp)
+	SendResponse(writer, resp)
 }

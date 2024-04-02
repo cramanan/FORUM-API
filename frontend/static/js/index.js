@@ -35,6 +35,19 @@ const router = async () => {
         };
     }
 
+    fetch("http://localhost:8081/", { credentials: "include" })
+        .then((resp) => {
+            if (resp.ok) {
+                return resp.json();
+            }
+            throw new Error("Error fetching the datas");
+        })
+        .then((data) => {
+            if (data) {
+                console.log(JSON.parse(data));
+            }
+        });
+
     const view = new match.route.view();
     view.setCSS();
     document.getElementById("root").innerHTML = await view.getHtml();

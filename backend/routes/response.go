@@ -1,4 +1,4 @@
-package models
+package routes
 
 import (
 	"encoding/json"
@@ -6,14 +6,13 @@ import (
 )
 
 type Response struct {
-	StatusCode int    `json:"status"`
-	Message    string `json:"message"`
-	Data       map[string]interface{}
+	StatusCode int                    `json:"status"`
+	Message    string                 `json:"message"`
+	Data       map[string]interface{} `json:"data"`
 }
 
 func SendResponse(w http.ResponseWriter, r Response) (err error) {
 	w.Header().Add("Content-type", "application/json")
 	w.WriteHeader(r.StatusCode)
-	err = json.NewEncoder(w).Encode(r)
-	return err
+	return json.NewEncoder(w).Encode(r)
 }
