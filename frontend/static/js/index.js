@@ -1,5 +1,3 @@
-console.log("JS is loaded");
-
 import Login from "./views/Login.js";
 import Home from "./views/Home.js";
 import ERROR404 from "./views/ERROR404.js";
@@ -44,7 +42,7 @@ const router = async () => {
         })
         .then((data) => {
             if (data) {
-                console.log(JSON.parse(data));
+                console.log(data.data);
             }
         });
 
@@ -81,7 +79,6 @@ window.HandleRegisterSubmit = (event) => {
         });
 };
 
-//Login
 window.HandleLoginSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);

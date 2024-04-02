@@ -19,6 +19,7 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
+		Data:       database.NewSession(writer, request).Values(),
 	}
 	err := SendResponse(writer, resp)
 	log.Println(err)
@@ -94,19 +95,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 
 	sess := database.NewSession(writer, request)
 
-	// if _, ok := sess.Get("username"); ok {
-	// 	resp.StatusCode = http.StatusUnauthorized
-	// 	resp.Message = "User is already active"
-	// 	SendResponse(writer, resp)
-	// 	return
-	// }
-
-	// if _, ok := sess.Get("password"); ok {
-	// 	resp.StatusCode = http.StatusUnauthorized
-	// 	resp.Message = "User is already active"
-	// 	SendResponse(writer, resp)
-	// 	return
-	// }
 	sess.Set("username", client.Username)
 	sess.Set("password", client.Password)
 	err = SendResponse(writer, resp)
@@ -169,20 +157,6 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	client = *comp
 	sess := database.NewSession(writer, request)
-
-	// if _, ok := sess.Get("username"); ok {
-	// 	resp.StatusCode = http.StatusUnauthorized
-	// 	resp.Message = "User is already active"
-	// 	SendResponse(writer, resp)
-	// 	return
-	// }
-
-	// if _, ok := sess.Get("password"); ok {
-	// 	resp.StatusCode = http.StatusUnauthorized
-	// 	resp.Message = "User is already active"
-	// 	SendResponse(writer, resp)
-	// 	return
-	// }
 	sess.Set("username", client.Username)
 	sess.Set("password", client.Password)
 	SendResponse(writer, resp)
