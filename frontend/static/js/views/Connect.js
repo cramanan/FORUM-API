@@ -2,11 +2,11 @@ import AbstractView from "./AbstractView.js";
 
 export default class extends AbstractView {
     constructor() {
-        super().setTitle("Register");
+        super().setTitle("Login");
     }
 
     async getHtml() {
-        const html = await fetch("/static/html/register.html")
+        const html = await fetch("/static/html/connect.html")
             .then((resp) => {
                 if (resp.ok) {
                     return resp.text();
@@ -22,7 +22,7 @@ export default class extends AbstractView {
     }
 
     setCSS() {
-        document.querySelector('link[rel="stylesheet"]').href =
-            "/static/css/register.css";
+        document.querySelector('#viewcss').href =
+            "/static/css/connect.css";
     }
 }

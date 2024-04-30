@@ -22,7 +22,7 @@ export default class extends AbstractView {
     }
 
     setCSS() {
-        document.querySelector('link[rel="stylesheet"]').href =
+        document.querySelector('#viewcss').href =
             "/static/css/index.css";
     }
 }

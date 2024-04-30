@@ -1,14 +1,12 @@
-import Login from "./views/Login.js";
 import Home from "./views/Home.js";
 import ERROR404 from "./views/ERROR404.js";
-import Register from "./views/Register.js";
+import Connect from "./views/Connect.js";
 
 
 const router = async () => {
     const routes = [
         { path: "/", view: Home },
-        { path: "/login", view: Login },
-        { path: "/register", view: Register },
+        { path: "/connect", view: Connect },
     ];
 
     const potentialMatches = routes.map((route) => {
