@@ -1,5 +1,6 @@
 export default class {
     constructor() {}
+    
     setTitle(title) {
         document.title = title;
     }
@@ -8,5 +9,5 @@ export default class {
         return "";
     }
 
-    setCSS(title) {}
+    setCSS() {}
 }

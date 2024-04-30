@@ -1,0 +1,23 @@
+<div id="connect">
+    <form onsubmit="HandleLoginSubmit(event)">
+        <h1>Login</h1>
+        <div id="server-error"></div>
+        <label for="email">Email</label>
+        <input type="text" id="email" name="email" />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" />
+        <button type="submit">Login</button>
+    </form>
+    <span id="sep"></span>
+    <form onsubmit="HandleRegisterSubmit(event)">
+        <h1>Register</h1>
+        <div id="server-error"></div>
+        <label for="email">Email</label>
+        <input type="text" id="email" name="email" />
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" />
+        <button type="submit">Register</button>
+    </form>
+</div>

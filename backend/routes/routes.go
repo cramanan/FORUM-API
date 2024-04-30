@@ -21,8 +21,7 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 		Message:    "OK",
 		Data:       database.NewSession(writer, request).Values(),
 	}
-	err := SendResponse(writer, resp)
-	log.Println(err)
+	SendResponse(writer, resp)
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {

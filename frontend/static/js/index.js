@@ -3,10 +3,6 @@ import Home from "./views/Home.js";
 import ERROR404 from "./views/ERROR404.js";
 import Register from "./views/Register.js";
 
-const navigateTo = (url) => {
-    history.pushState(null, null, url);
-    router();
-};
 
 const router = async () => {
     const routes = [
@@ -33,18 +29,6 @@ const router = async () => {
         };
     }
 
-    fetch("http://localhost:8081/", { credentials: "include" })
-        .then((resp) => {
-            if (resp.ok) {
-                return resp.json();
-            }
-            throw new Error("Error fetching the datas");
-        })
-        .then((data) => {
-            if (data) {
-                console.log(data.data);
-            }
-        });
 
     const view = new match.route.view();
     view.setCSS();
@@ -52,6 +36,11 @@ const router = async () => {
 };
 
 window.addEventListener("popstate", router);
+
+const navigateTo = (url) => {
+    history.pushState(null, null, url);
+    router();
+};
 
 document.addEventListener("DOMContentLoaded", () => {
     document.body.addEventListener("click", (e) => {
