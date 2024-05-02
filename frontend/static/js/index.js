@@ -55,7 +55,11 @@ document.addEventListener("DOMContentLoaded", () => {
 window.HandleRegisterSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
-    fetch("http://localhost:8081/register", { method: "post", body: data })
+    fetch("http://localhost:8081/register", {
+        method: "post",
+        body: data,
+        credentials: "include",
+    })
         .then((resp) => {
             if (resp.ok) {
                 navigateTo("/");
@@ -63,7 +67,8 @@ window.HandleRegisterSubmit = (event) => {
             return resp.json();
         })
         .then((data) => {
-            document.getElementById("server-error").textContent = data.message;
+            document.getElementById("register-server-error").textContent =
+                data.message;
         });
 };
 
@@ -82,7 +87,8 @@ window.HandleLoginSubmit = (event) => {
             return resp.json();
         })
         .then((data) => {
-            document.getElementById("server-error").textContent = data.message;
+            document.getElementById("login-server-error").textContent =
+                data.message;
         })
         .catch(() => {});
 };

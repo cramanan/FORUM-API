@@ -54,9 +54,6 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 	if !ok {
 		return nil, errors.New("no session found")
 	}
-	// private_store.Lock()
-	// private_store.sessions[sessid] = s
-	// private_store.Unlock()
 	return
 }
 
@@ -75,6 +72,7 @@ func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	}
 	http.SetCookie(w, &cookie)
 	private_store.Lock()
+	s.cookie = cookie
 	private_store.sessions[sessid] = s
 	private_store.Unlock()
 	return s
@@ -113,5 +111,5 @@ func new_store() *session_store {
 var (
 	private_store  = new_store()
 	CookieName     = "session-id"
-	SessionTimeout = 3 * time.Hour
+	SessionTimeout = time.Hour * 2
 )

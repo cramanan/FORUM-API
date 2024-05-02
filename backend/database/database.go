@@ -22,7 +22,8 @@ func InitDB() (err error) {
 uuid TEXT PRIMARY KEY,
 email TEXT NOT NULL UNIQUE,
 username TEXT,
-password TEXT
+password TEXT,
+gender TEXT
 );`
 	_, err = db.Exec(r)
 	return err
@@ -35,9 +36,9 @@ func AddClient(c models.Client) (err error) {
 	}
 	defer db.Close()
 
-	r := "INSERT INTO clients VALUES(?, ?, ?, ?)"
+	r := "INSERT INTO clients VALUES(?, ?, ?, ?, ?)"
 
-	_, err = db.Exec(r, c.Uuid, c.Email.Address, c.Username, c.Password)
+	_, err = db.Exec(r, c.Uuid, c.Email.Address, c.Username, c.Password, c.Gender)
 	return err
 }
 

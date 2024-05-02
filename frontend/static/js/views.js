@@ -82,7 +82,7 @@ class Home extends AbstractView {
     }
 
     setCSS() {
-        document.querySelector("#viewcss").href = "/static/css/index.css";
+        document.querySelector("#viewcss").href = "/static/css/home.css";
     }
 }
 

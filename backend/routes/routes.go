@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -22,6 +23,7 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 	}
 	sess, err := database.GetSession(writer, request)
 	if err != nil {
+		fmt.Println(err)
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Unauthorized"
 	} else {
@@ -32,7 +34,8 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", "*")
+	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
@@ -46,8 +49,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	var err error
 
 	client := models.Client{
-		Username: request.FormValue("username"),
-		Password: request.FormValue("password"),
+		Username: request.FormValue("register-username"),
+		Password: request.FormValue("register-password"),
 	}
 
 	if client.Username == "" || client.Password == "" {
@@ -57,7 +60,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	client.Email, err = mail.ParseAddress(request.FormValue("email"))
+	client.Email, err = mail.ParseAddress(request.FormValue("register-email"))
+	fmt.Println(request.FormValue("register-email"))
 
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
@@ -85,6 +89,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client.Password = string(crypt)
+	client.Gender = request.FormValue("register-gender")
 
 	err = database.AddClient(client)
 	if err != nil {
@@ -98,8 +103,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		SendResponse(writer, resp)
 		return
 	}
-
-	// sess := database.NewSession(writer, request)
 
 	sess := database.CreateSession(writer, request)
 	sess.Set("username", client.Username)

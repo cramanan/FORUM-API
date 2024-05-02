@@ -11,4 +11,5 @@ type Client struct {
 	Email    *mail.Address
 	Username string
 	Password string
+	Gender   string
 }
