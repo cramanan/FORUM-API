@@ -1,6 +1,4 @@
-import Home from "./views/Home.js";
-import ERROR404 from "./views/ERROR404.js";
-import Connect from "./views/Connect.js";
+import { Home, Connect, _404 } from "./views.js";
 
 const router = async () => {
     const routes = [
@@ -21,7 +19,7 @@ const router = async () => {
 
     if (!match) {
         match = {
-            route: { path: "/", view: ERROR404 },
+            route: { path: "/", view: _404 },
             isMatch: false,
         };
     }
