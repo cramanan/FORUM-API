@@ -19,7 +19,14 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
-		Data:       database.NewSession(writer, request).Values(),
+	}
+	sess, err := database.GetSession(writer, request)
+	if err != nil {
+		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "Unauthorized"
+	} else {
+		resp.Data = make(map[string]interface{})
+		resp.Data = sess.Values()
 	}
 	SendResponse(writer, resp)
 }
@@ -92,12 +99,11 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	sess := database.NewSession(writer, request)
+	// sess := database.NewSession(writer, request)
 
+	sess := database.CreateSession(writer, request)
 	sess.Set("username", client.Username)
-	sess.Set("password", client.Password)
-	err = SendResponse(writer, resp)
-	log.Println(err)
+	SendResponse(writer, resp)
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
@@ -115,7 +121,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client := models.Client{
-		Password: request.FormValue("password"),
+		Password: request.FormValue("login-password"),
 	}
 
 	if client.Password == "" {
@@ -125,7 +131,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	var err error
-	client.Email, err = mail.ParseAddress(request.FormValue("email"))
+	client.Email, err = mail.ParseAddress(request.FormValue("login-email"))
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid mail format"
@@ -155,8 +161,10 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client = *comp
-	sess := database.NewSession(writer, request)
+	// sess := database.NewSession(writer, request)
+	// sess.Set("username", client.Username)
+	// sess.Set("password", client.Password)
+	sess := database.CreateSession(writer, request)
 	sess.Set("username", client.Username)
-	sess.Set("password", client.Password)
 	SendResponse(writer, resp)
 }

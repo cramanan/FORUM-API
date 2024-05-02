@@ -2,7 +2,6 @@ import Home from "./views/Home.js";
 import ERROR404 from "./views/ERROR404.js";
 import Connect from "./views/Connect.js";
 
-
 const router = async () => {
     const routes = [
         { path: "/", view: Home },
@@ -27,6 +26,10 @@ const router = async () => {
         };
     }
 
+    const authorized = await fetch("http://localhost:8081/", {
+        credentials: "include",
+    }).then((resp) => resp.ok);
+    console.log(authorized);
 
     const view = new match.route.view();
     view.setCSS();

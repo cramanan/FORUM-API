@@ -1,17 +1,12 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"sync"
 	"time"
-)
-
-var (
-	private_store  = new_store()
-	CookieValue    = "session-id"
-	SessionTimeout = 3 * time.Hour
 )
 
 func generate_id_64(lenght int) string {
@@ -24,21 +19,21 @@ func generate_id_64(lenght int) string {
 }
 
 type Session struct {
-	mx     sync.RWMutex
+	sync.RWMutex
 	cookie http.Cookie
 	values map[string]any
 }
 
 func (sess *Session) Get(key string) (value any, ok bool) {
-	sess.mx.RLock()
-	defer sess.mx.RUnlock()
+	sess.RLock()
+	defer sess.RUnlock()
 	value, ok = sess.values[key]
 	return value, ok
 }
 
 func (sess *Session) Set(key string, value any) {
-	sess.mx.Lock()
-	defer sess.mx.Unlock()
+	sess.Lock()
+	defer sess.Unlock()
 	sess.values[key] = value
 }
 
@@ -46,11 +41,31 @@ func (sess *Session) Values() map[string]any {
 	return sess.values
 }
 
-func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
+func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) {
+	fmt.Println(private_store.sessions)
+	// s.values = make(map[string]any)
+
+	cookie, err := r.Cookie(CookieName)
+	if err != nil {
+		return nil, err
+	}
+
+	s, ok := private_store.sessions[cookie.Value]
+	if !ok {
+		return nil, errors.New("no session found")
+	}
+	// private_store.Lock()
+	// private_store.sessions[sessid] = s
+	// private_store.Unlock()
+	return
+}
+
+func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	s = new(Session)
+	s.values = make(map[string]any)
 	sessid := generate_id_64(16)
-	s.cookie = http.Cookie{
-		Name:     CookieValue,
+	cookie := http.Cookie{
+		Name:     CookieName,
 		Value:    sessid,
 		Expires:  time.Now().Add(SessionTimeout),
 		SameSite: http.SameSiteNoneMode,
@@ -58,22 +73,10 @@ func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 		Path:     "/",
 		HttpOnly: false,
 	}
-	s.values = make(map[string]any)
-
-	cookie, _ := r.Cookie(CookieValue)
-	if cookie != nil {
-		private_store.mx.RLock()
-		sx, ok := private_store.sessions[cookie.Value]
-		private_store.mx.RUnlock()
-		if ok {
-			return sx
-		}
-
-	}
-	http.SetCookie(w, &s.cookie)
-	private_store.mx.Lock()
+	http.SetCookie(w, &cookie)
+	private_store.Lock()
 	private_store.sessions[sessid] = s
-	private_store.mx.Unlock()
+	private_store.Unlock()
 	return s
 }
 
@@ -82,7 +85,7 @@ func (sess *Session) End() {
 }
 
 type session_store struct {
-	mx       sync.RWMutex
+	sync.RWMutex
 	sessions map[string]*Session
 }
 
@@ -91,10 +94,10 @@ func (st *session_store) timeout_cycle() {
 		time.Sleep(SessionTimeout)
 		for key, sess := range st.sessions {
 			if sess.cookie.Expires.Before(time.Now()) {
-				st.mx.Lock()
+				st.Lock()
 				delete(st.sessions, key)
 				fmt.Println("Deleted", key)
-				st.mx.Unlock()
+				st.Unlock()
 			}
 		}
 	}
@@ -106,3 +109,9 @@ func new_store() *session_store {
 	go store.timeout_cycle()
 	return store
 }
+
+var (
+	private_store  = new_store()
+	CookieName     = "session-id"
+	SessionTimeout = 3 * time.Hour
+)

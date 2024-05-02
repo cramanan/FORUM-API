@@ -6,20 +6,19 @@
     box-sizing: border-box;
 }
 
-#connect{
+#connect {
     display: flex;
     flex-direction: row;
-    margin: auto;
     align-items: center;
 }
 
-#sep{
+#sep {
     height: 30dvh;
     width: 2px;
     background-color: black;
 }
 
-form{
+form {
     width: 500px;
     display: flex;
     flex-direction: column;
