@@ -65,8 +65,6 @@ func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 		Name:     CookieName,
 		Value:    sessid,
 		Expires:  time.Now().Add(SessionTimeout),
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
 		Path:     "/",
 		HttpOnly: false,
 	}

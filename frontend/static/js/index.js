@@ -1,7 +1,9 @@
 import { Home, Connect, _404 } from "./views.js";
 
+const APIendpoint = "http://192.168.228.104:8081/";
+
 const canActivate = async () => {
-    const authorized = await fetch("http://localhost:8081/", {
+    const authorized = await fetch(APIendpoint, {
         credentials: "include",
     }).then((resp) => resp.ok);
     return authorized;
@@ -65,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.HandleRegisterSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
-    fetch("http://localhost:8081/register", {
+    fetch(`${APIendpoint}/register`, {
         method: "post",
         body: data,
         credentials: "include",
@@ -85,7 +87,7 @@ window.HandleRegisterSubmit = (event) => {
 window.HandleLoginSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
-    fetch("http://localhost:8081/login", {
+    fetch(`${APIendpoint}/register`, {
         method: "post",
         body: data,
         credentials: "include",
