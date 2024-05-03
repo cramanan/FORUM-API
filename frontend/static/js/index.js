@@ -1,9 +1,16 @@
 import { Home, Connect, _404 } from "./views.js";
 
+const canActivate = async () => {
+    const authorized = await fetch("http://localhost:8081/", {
+        credentials: "include",
+    }).then((resp) => resp.ok);
+    return authorized;
+};
+
 const router = async () => {
     const routes = [
-        { path: "/", view: Home },
-        { path: "/connect", view: Connect },
+        { path: "/", view: Home, canActivate },
+        { path: "/connect", view: Connect, canActivate: async () => true },
     ];
 
     const potentialMatches = routes.map((route) => {
@@ -24,10 +31,13 @@ const router = async () => {
         };
     }
 
-    const authorized = await fetch("http://localhost:8081/", {
-        credentials: "include",
-    }).then((resp) => resp.ok);
-    console.log(authorized);
+    if (!(await match.route.canActivate())) {
+        match = {
+            route: { path: "/connect", view: Connect },
+            isMatch: true,
+        };
+        history.pushState(null, null, "/connect");
+    }
 
     const view = new match.route.view();
     view.setCSS();
