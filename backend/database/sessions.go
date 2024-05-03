@@ -42,9 +42,6 @@ func (sess *Session) Values() map[string]any {
 }
 
 func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) {
-	fmt.Println(private_store.sessions)
-	// s.values = make(map[string]any)
-
 	cookie, err := r.Cookie(CookieName)
 	if err != nil {
 		return nil, err

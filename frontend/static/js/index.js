@@ -1,6 +1,6 @@
 import { Home, Connect, _404 } from "./views.js";
 
-const APIendpoint = "http://192.168.228.104:8081/";
+const APIendpoint = "http://localhost:8081";
 
 const canActivate = async () => {
     const authorized = await fetch(APIendpoint, {
@@ -28,7 +28,7 @@ const router = async () => {
 
     if (!match) {
         match = {
-            route: { path: "/", view: _404 },
+            route: { path: "/", view: _404, canActivate: async () => true },
             isMatch: false,
         };
     }
@@ -42,8 +42,8 @@ const router = async () => {
     }
 
     const view = new match.route.view();
-    view.setCSS();
     document.getElementById("root").innerHTML = await view.getHtml();
+    view.setCSS();
 };
 
 window.addEventListener("popstate", router);
@@ -87,7 +87,7 @@ window.HandleRegisterSubmit = (event) => {
 window.HandleLoginSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.target);
-    fetch(`${APIendpoint}/register`, {
+    fetch(`${APIendpoint}/login`, {
         method: "post",
         body: data,
         credentials: "include",

@@ -6,20 +6,27 @@
     box-sizing: border-box;
 }
 
-#connect {
+#root {
     display: flex;
-    flex-direction: row;
-    align-items: center;
 }
 
 #sep {
-    height: 30dvh;
+    height: 90%;
     width: 2px;
     background-color: black;
 }
 
+#connect {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: auto;
+    width: 1000px;
+    height: 500px;
+    justify-content: space-evenly;
+}
+
 form {
-    width: 500px;
     display: flex;
     flex-direction: column;
     align-items: center;

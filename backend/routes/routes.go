@@ -110,8 +110,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
