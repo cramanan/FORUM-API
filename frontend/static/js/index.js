@@ -104,3 +104,12 @@ window.HandleLoginSubmit = (event) => {
         })
         .catch(() => {});
 };
+
+window.Post = (event) => {
+    event.preventDefault();
+    fetch(`${APIendpoint}/post`, {
+        method: "post",
+        //body: data,
+        credentials: "include",
+    }).then((resp) => resp.json());
+};

@@ -24,7 +24,9 @@ email TEXT NOT NULL UNIQUE,
 username TEXT,
 password TEXT,
 gender TEXT
-);`
+);
+
+`
 	_, err = db.Exec(r)
 	return err
 }
