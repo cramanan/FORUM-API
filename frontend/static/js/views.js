@@ -1,3 +1,5 @@
+import { APIendpoint } from "./index.js";
+
 class AbstractView {
     constructor() {}
 
@@ -18,19 +20,13 @@ class Connect extends AbstractView {
     }
 
     async getHtml() {
-        const html = await fetch("/static/html/connect.html")
-            .then((resp) => {
-                if (resp.ok) {
-                    return resp.text();
-                }
-                throw new Error("Resource not found");
-            })
-            .then((txt) => {
-                return txt;
-            })
-            .catch((reason) => console.log(reason));
-
-        return html;
+        try {
+            const html = await fetch("/static/html/connect.html");
+            return await html.text();
+        } catch (reason) {
+            console.log(reason);
+        }
+        return "<h1>00PS... Something went wrong ://</h1>";
     }
 
     setCSS() {
@@ -44,19 +40,7 @@ class _404 extends AbstractView {
     }
 
     async getHtml() {
-        const html = await fetch("/static/html/404.html")
-            .then((resp) => {
-                if (resp.ok) {
-                    return resp.text();
-                }
-                throw new Error("Resource not found");
-            })
-            .then((txt) => {
-                return txt;
-            })
-            .catch((reason) => console.log(reason));
-
-        return html;
+        return "<h1>404 NOT FOUND</h1>";
     }
 }
 
@@ -66,19 +50,34 @@ class Home extends AbstractView {
     }
 
     async getHtml() {
-        const html = await fetch("/static/html/index.html")
-            .then((resp) => {
-                if (resp.ok) {
-                    return resp.text();
-                }
-                throw new Error("Resource not found");
-            })
-            .then((txt) => {
-                return txt;
-            })
-            .catch((reason) => console.log(reason));
+        try {
+            const response = await fetch(`${APIendpoint}/getposts`);
+            const datas = await response.json();
+            let postsHTML = "";
+            datas.data.posts.forEach((post) => {
+                postsHTML += `<a class="post" href="/post/${post.UserID}"><h2>${post.Username}</h2><p>${post.Content}</p></a>`;
+            });
+            const html = `<nav class="header">
+                <h3><a href="/" id="main-title">REAL-TIME FORUM</a></h3>
+            </nav>
+            <main>
+            <form id="post-form" onsubmit="Post(event)">
+                <label for="post-content">Create a P0ST</label>
+                <textarea name="post-content" id="post-content"></textarea>
+                <button type="submit">P0ST</button>
+            </form>
+            <div id="all-posts">
+                ${postsHTML}
+            </div>
+        </main>
+        <footer>
 
-        return html;
+        </footer>`;
+            return html;
+        } catch (error) {
+            console.log(error);
+        }
+        return "<h1>00PS... Something went wrong ://</h1>";
     }
 
     setCSS() {

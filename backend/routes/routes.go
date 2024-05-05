@@ -5,12 +5,12 @@ import (
 	"backend/models"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
 
 	"github.com/gofrs/uuid"
+	"github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -60,8 +60,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client.Email, err = mail.ParseAddress(request.FormValue("register-email"))
-	fmt.Println(request.FormValue("register-email"))
-
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid Email format"
@@ -92,13 +90,14 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 
 	err = database.AddClient(client)
 	if err != nil {
-		if err.Error() == "UNIQUE constraint failed: clients.email" {
+		if errors.Is(err, sqlite3.ErrConstraintUnique) {
 			resp.StatusCode = http.StatusConflict
 			resp.Message = "Email adress already taken"
 			SendResponse(writer, resp)
 			return
 		}
 		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)
 		return
 	}
@@ -167,33 +166,52 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	// sess.Set("username", client.Username)
 	// sess.Set("password", client.Password)
 	sess := database.CreateSession(writer, request)
+	sess.Set("userid", client.Uuid.String())
 	sess.Set("username", client.Username)
 	SendResponse(writer, resp)
 }
 
-func Post(writer http.ResponseWriter, request *http.Request) {
+// func Post(writer http.ResponseWriter, request *http.Request) {
+// 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+// 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+// 	resp := Response{
+// 		StatusCode: http.StatusOK,
+// 		Message:    "OK",
+// 	}
+
+// 	if request.Method != http.MethodPost {
+// 		resp.StatusCode = http.StatusBadRequest
+// 		resp.Message = "Bad Request"
+// 		SendResponse(writer, resp)
+// 		return
+// 	}
+
+// 	sess, err := database.GetSession(writer, request)
+// 	if err != nil {
+// 		resp.StatusCode = http.StatusUnauthorized
+// 		resp.Message = "Unauthorized"
+// 	} else {
+// 		//resp.Data = make(map[string]interface{})
+// 		resp.Data = sess.Values()
+// 	}
+// 	SendResponse(writer, resp)
+// }
+
+func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	// resp := Response{
-	// 	StatusCode: http.StatusOK,
-	// 	Message:    "OK",
-	// }
+	posts, err := database.GetAllPosts()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-	// if request.Method != http.MethodPost {
-	// 	resp.StatusCode = http.StatusBadRequest
-	// 	resp.Message = "Bad Request"
-	// 	SendResponse(writer, resp)
-	// 	return
-	// }
-
-	// sess, err := database.GetSession(writer, request)
-	// if err != nil {
-	// 	resp.StatusCode = http.StatusUnauthorized
-	// 	resp.Message = "Unauthorized"
-	// } else {
-	// 	//resp.Data = make(map[string]interface{})
-	// 	resp.Data = sess.Values()
-	// }
-	// SendResponse(writer, resp)
-	log.Println("Server Reached")
+	resp := Response{
+		StatusCode: http.StatusOK,
+		Message:    "OK",
+		Data: map[string]interface{}{
+			"posts": posts,
+		},
+	}
+	SendResponse(writer, resp)
 }

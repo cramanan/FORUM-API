@@ -1,12 +1,17 @@
 import { Home, Connect, _404 } from "./views.js";
 
-const APIendpoint = "http://localhost:8081";
+export const APIendpoint = "http://localhost:8081";
 
 const canActivate = async () => {
-    const authorized = await fetch(APIendpoint, {
-        credentials: "include",
-    }).then((resp) => resp.ok);
-    return authorized;
+    try {
+        const authorized = await fetch(APIendpoint, {
+            credentials: "include",
+        }).then((resp) => resp.ok);
+        return authorized;
+    } catch (reason) {
+        console.log(reason);
+    }
+    return false;
 };
 
 const router = async () => {
@@ -101,15 +106,17 @@ window.HandleLoginSubmit = (event) => {
         .then((data) => {
             document.getElementById("login-server-error").textContent =
                 data.message;
-        })
-        .catch(() => {});
+        });
 };
 
-window.Post = (event) => {
-    event.preventDefault();
-    fetch(`${APIendpoint}/post`, {
-        method: "post",
-        //body: data,
-        credentials: "include",
-    }).then((resp) => resp.json());
-};
+// window.Post = (event) => {
+//     event.preventDefault();
+//     const data = new FormData(event.target);
+//     fetch(`${APIendpoint}/post`, {
+//         method: "post",
+//         body: data,
+//         credentials: "include",
+//     })
+//         .then((resp) => resp.json())
+//         .then((data) => console.log(data));
+// };
