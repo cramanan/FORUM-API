@@ -51,7 +51,7 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 	if !ok {
 		return nil, errors.New("no session found")
 	}
-	return
+	return s, nil
 }
 
 func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {

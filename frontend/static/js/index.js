@@ -1,6 +1,6 @@
 import { Home, Connect, _404 } from "./views.js";
 
-export const APIendpoint = "http://localhost:8081";
+const APIendpoint = "http://localhost:8081";
 
 const Authorized = async () => {
     try {
@@ -50,7 +50,7 @@ const router = async () => {
 
 window.addEventListener("popstate", router);
 
-export const navigateTo = (url) => {
+const navigateTo = (url) => {
     history.pushState(null, null, url);
     router();
 };
@@ -64,3 +64,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     router();
 });
+
+export { APIendpoint, navigateTo };

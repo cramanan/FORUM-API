@@ -93,6 +93,18 @@ func GetClientFromMail(email *mail.Address) (c *models.Client, err error) {
 	return c, err
 }
 
+func CreatePost(p models.Post) (err error) {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	r := "INSERT INTO posts VALUES(?, ?);"
+	_, err = db.Exec(r, p.UserID, p.Content)
+	return err
+}
+
 func GetAllPosts() ([]models.Post, error) {
 	res := []models.Post{}
 	db, err := sql.Open("sqlite3", DB)

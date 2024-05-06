@@ -110,7 +110,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	sess := database.CreateSession(writer, request)
-	sess.Set("userid", client.Uuid.String())
+	sess.Set("uuid", client.Uuid.String())
 	sess.Set("username", client.Username)
 	SendResponse(writer, resp)
 }
@@ -171,7 +171,8 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	client = *comp
 	sess := database.CreateSession(writer, request)
-	sess.Set("userid", client.Uuid.String())
+	sess.Set("uuid", client.Uuid.String())
+	log.Println(sess.Values())
 	sess.Set("username", client.Username)
 	SendResponse(writer, resp)
 }
@@ -179,28 +180,61 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 func Post(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	// resp := Response{
-	// 	StatusCode: http.StatusOK,
-	// 	Message:    "OK",
-	// }
+	resp := Response{
+		StatusCode: http.StatusOK,
+		Message:    "OK",
+	}
 
-	// if request.Method != http.MethodPost {
-	// 	resp.StatusCode = http.StatusBadRequest
-	// 	resp.Message = "Bad Request"
-	// 	SendResponse(writer, resp)
-	// 	return
-	// }
+	if request.Method != http.MethodPost {
+		resp.StatusCode = http.StatusBadRequest
+		resp.Message = "Bad Request"
+		SendResponse(writer, resp)
+		return
+	}
 
-	// sess, err := database.GetSession(writer, request)
-	// if err != nil {
-	// 	resp.StatusCode = http.StatusUnauthorized
-	// 	resp.Message = "Unauthorized"
-	// } else {
-	// 	//resp.Data = make(map[string]interface{})
-	// 	resp.Data = sess.Values()
-	// }
-	// SendResponse(writer, resp)
-	log.Println("Server Reached")
+	sess, err := database.GetSession(writer, request)
+	if err != nil {
+		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "Unauthorized"
+		SendResponse(writer, resp)
+		return
+	}
+
+	p := models.Post{}
+	assertion, ok := sess.Get("uuid")
+	if !ok {
+		log.Println("UUID not found")
+		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
+		SendResponse(writer, resp)
+		return
+	}
+
+	p.UserID, ok = assertion.(string)
+	if !ok {
+		log.Println("UUID not a string")
+		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
+		SendResponse(writer, resp)
+		return
+	}
+
+	p.Content = request.FormValue("post-content")
+	if p.Content == "" {
+		log.Println("Empty content")
+		resp.StatusCode = http.StatusBadRequest
+		resp.Message = "Bad Request"
+		SendResponse(writer, resp)
+		return
+	}
+
+	err = database.CreatePost(p)
+	if err != nil {
+		log.Println(err)
+		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
+	}
+	SendResponse(writer, resp)
 }
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) {

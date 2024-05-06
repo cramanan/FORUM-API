@@ -1,4 +1,4 @@
-import { navigateTo } from "./index.js";
+import { navigateTo, APIendpoint } from "./index.js";
 
 class AbstractView {
     constructor() {}
@@ -124,14 +124,8 @@ class Home extends AbstractView {
     }
 
     async getHtml() {
-        try {
-            const response = await fetch(`${APIendpoint}/getposts`);
-            const datas = await response.json();
-            let postsHTML = "";
-            datas.data.forEach((post) => {
-                postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
-            });
-            const html = `<nav class="header">
+        let postsHTML = "";
+        const html = `<nav class="header">
                 <h3><a href="/" id="main-title">REAL-TIME FORUM</a></h3>
             </nav>
             <main>
@@ -147,11 +141,16 @@ class Home extends AbstractView {
         <footer>
 
         </footer>`;
-            return html;
+        try {
+            const response = await fetch(`${APIendpoint}/getposts`);
+            const datas = await response.json();
+            datas.data.forEach((post) => {
+                postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
+            });
         } catch (error) {
             console.log(error);
         }
-        return "<h1>00PS... Something went wrong ://</h1>";
+        return html;
     }
 
     async Post(event) {
@@ -163,8 +162,7 @@ class Home extends AbstractView {
                 body: data,
                 credentials: "include",
             });
-
-            console.log(response.ok);
+            console.log(data);
         } catch (reason) {
             console.log(reason);
         }
