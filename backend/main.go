@@ -19,7 +19,7 @@ func main() {
 	mux.HandleFunc("/register", routes.RegisterClient)
 	mux.HandleFunc("/login", routes.LogClientIn)
 	mux.HandleFunc("/getposts", routes.GetPosts)
-	// mux.HandleFunc("/post", routes.Post)
+	mux.HandleFunc("/post", routes.Post)
 	server := http.Server{
 		Addr:    ":8081",
 		Handler: mux,

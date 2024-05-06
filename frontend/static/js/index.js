@@ -53,7 +53,7 @@ const router = async () => {
 
 window.addEventListener("popstate", router);
 
-const navigateTo = (url) => {
+export const navigateTo = (url) => {
     history.pushState(null, null, url);
     router();
 };
@@ -67,15 +67,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     router();
 });
-
-// window.Post = (event) => {
-//     event.preventDefault();
-//     const data = new FormData(event.target);
-//     fetch(`${APIendpoint}/post`, {
-//         method: "post",
-//         body: data,
-//         credentials: "include",
-//     })
-//         .then((resp) => resp.json())
-//         .then((data) => console.log(data));
-// };

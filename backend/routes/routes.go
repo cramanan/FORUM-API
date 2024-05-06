@@ -177,31 +177,32 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	SendResponse(writer, resp)
 }
 
-// func Post(writer http.ResponseWriter, request *http.Request) {
-// 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-// 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-// 	resp := Response{
-// 		StatusCode: http.StatusOK,
-// 		Message:    "OK",
-// 	}
+func Post(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	// resp := Response{
+	// 	StatusCode: http.StatusOK,
+	// 	Message:    "OK",
+	// }
 
-// 	if request.Method != http.MethodPost {
-// 		resp.StatusCode = http.StatusBadRequest
-// 		resp.Message = "Bad Request"
-// 		SendResponse(writer, resp)
-// 		return
-// 	}
+	// if request.Method != http.MethodPost {
+	// 	resp.StatusCode = http.StatusBadRequest
+	// 	resp.Message = "Bad Request"
+	// 	SendResponse(writer, resp)
+	// 	return
+	// }
 
-// 	sess, err := database.GetSession(writer, request)
-// 	if err != nil {
-// 		resp.StatusCode = http.StatusUnauthorized
-// 		resp.Message = "Unauthorized"
-// 	} else {
-// 		//resp.Data = make(map[string]interface{})
-// 		resp.Data = sess.Values()
-// 	}
-// 	SendResponse(writer, resp)
-// }
+	// sess, err := database.GetSession(writer, request)
+	// if err != nil {
+	// 	resp.StatusCode = http.StatusUnauthorized
+	// 	resp.Message = "Unauthorized"
+	// } else {
+	// 	//resp.Data = make(map[string]interface{})
+	// 	resp.Data = sess.Values()
+	// }
+	// SendResponse(writer, resp)
+	log.Println("Server Reached")
+}
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))

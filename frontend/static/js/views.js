@@ -1,4 +1,4 @@
-import { APIendpoint } from "./index.js";
+import { APIendpoint, navigateTo } from "./index.js";
 
 class AbstractView {
     constructor() {}
@@ -16,7 +16,7 @@ class AbstractView {
 
 class Connect extends AbstractView {
     constructor() {
-        super().setTitle("Login");
+        super().setTitle("Connect");
         window.HandleLoginSubmit = this.HandleLoginSubmit;
         window.HandleRegisterSubmit = this.HandleRegisterSubmit;
     }
@@ -117,6 +117,7 @@ class _404 extends AbstractView {
 class Home extends AbstractView {
     constructor() {
         super().setTitle("Real-Time Forum");
+        window.Post = this.Post;
     }
 
     async getHtml() {
@@ -152,6 +153,22 @@ class Home extends AbstractView {
 
     setCSS() {
         document.querySelector("#viewcss").href = "/static/css/home.css";
+    }
+
+    async Post(event) {
+        event.preventDefault();
+        try {
+            const data = new FormData(event.target);
+            const response = await fetch(`${APIendpoint}/post`, {
+                method: "post",
+                body: data,
+                credentials: "include",
+            });
+
+            console.log(response.ok);
+        } catch (reason) {
+            console.log(reason);
+        }
     }
 }
 
