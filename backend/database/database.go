@@ -6,7 +6,7 @@ import (
 	"net/mail"
 
 	"github.com/gofrs/uuid"
-	"github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const DB = "data/database.sqlite"
@@ -23,7 +23,10 @@ uuid TEXT PRIMARY KEY,
 email TEXT NOT NULL UNIQUE,
 username TEXT,
 password TEXT,
-gender TEXT
+gender TEXT,
+age INTEGER DEFAULT 0,
+ firstname TEXT,
+ lastname TEXT
 );
 
 CREATE TABLE IF NOT EXISTS posts (
@@ -41,14 +44,24 @@ func AddClient(c models.Client) (err error) {
 		return err
 	}
 	defer db.Close()
-	r := "SELECT * FROM users WHERE email = ?"
+	r := "SELECT * FROM users WHERE email = ?;"
 	row := db.QueryRow(r, c.Email.Address)
-	if row.Err() == nil {
-		return sqlite3.ErrConstraintUnique
+	err = row.Scan()
+	if err != sql.ErrNoRows {
+		return err
 	}
 
-	r = "INSERT INTO users VALUES(?, ?, ?, ?, ?)"
-	_, err = db.Exec(r, c.Uuid, c.Email.Address, c.Username, c.Password, c.Gender)
+	r = "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?, ?);"
+	_, err = db.Exec(r,
+		c.Uuid,
+		c.Email.Address,
+		c.Username,
+		c.Password,
+		c.Gender,
+		c.Age,
+		c.FirstName,
+		c.LastName,
+	)
 	return err
 }
 
@@ -80,8 +93,8 @@ func GetClientFromMail(email *mail.Address) (c *models.Client, err error) {
 	return c, err
 }
 
-func GetAllPosts() (res []models.Post, err error) {
-	res = []models.Post{}
+func GetAllPosts() ([]models.Post, error) {
+	res := []models.Post{}
 	db, err := sql.Open("sqlite3", DB)
 	if err != nil {
 		return nil, err

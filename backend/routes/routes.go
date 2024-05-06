@@ -10,7 +10,6 @@ import (
 	"net/mail"
 
 	"github.com/gofrs/uuid"
-	"github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -50,9 +49,18 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	client := models.Client{
 		Username: request.FormValue("register-username"),
 		Password: request.FormValue("register-password"),
+		Gender:   request.FormValue("register-gender"),
+		//Add Age
+		FirstName: request.FormValue("register-first-name"),
+		LastName:  request.FormValue("register-last-name"),
 	}
 
-	if client.Username == "" || client.Password == "" {
+	if client.Username == "" ||
+		client.Password == "" ||
+		client.Gender == "" ||
+		client.FirstName == "" ||
+		client.LastName == "" {
+
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty Credentials"
 		SendResponse(writer, resp)
@@ -86,16 +94,16 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client.Password = string(crypt)
-	client.Gender = request.FormValue("register-gender")
 
 	err = database.AddClient(client)
 	if err != nil {
-		if errors.Is(err, sqlite3.ErrConstraintUnique) {
-			resp.StatusCode = http.StatusConflict
-			resp.Message = "Email adress already taken"
-			SendResponse(writer, resp)
-			return
-		}
+		log.Println(err)
+		// if errors.Is(err, sqlite3.ErrConstraintUnique) {
+		// 	resp.StatusCode = http.StatusConflict
+		// 	resp.Message = "Email adress already taken"
+		// 	SendResponse(writer, resp)
+		// 	return
+		// }
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)
@@ -103,6 +111,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	sess := database.CreateSession(writer, request)
+	sess.Set("userid", client.Uuid.String())
 	sess.Set("username", client.Username)
 	SendResponse(writer, resp)
 }
@@ -162,9 +171,6 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client = *comp
-	// sess := database.NewSession(writer, request)
-	// sess.Set("username", client.Username)
-	// sess.Set("password", client.Password)
 	sess := database.CreateSession(writer, request)
 	sess.Set("userid", client.Uuid.String())
 	sess.Set("username", client.Username)

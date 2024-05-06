@@ -55,7 +55,7 @@ class Home extends AbstractView {
             const datas = await response.json();
             let postsHTML = "";
             datas.data.posts.forEach((post) => {
-                postsHTML += `<a class="post" href="/post/${post.UserID}"><h2>${post.Username}</h2><p>${post.Content}</p></a>`;
+                postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
             });
             const html = `<nav class="header">
                 <h3><a href="/" id="main-title">REAL-TIME FORUM</a></h3>

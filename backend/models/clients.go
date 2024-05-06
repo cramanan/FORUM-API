@@ -7,9 +7,12 @@ import (
 )
 
 type Client struct {
-	Uuid     uuid.UUID
-	Email    *mail.Address
-	Username string
-	Password string
-	Gender   string
+	Uuid      uuid.UUID
+	Email     *mail.Address
+	Username  string
+	Password  string
+	Gender    string
+	Age       int
+	FirstName string
+	LastName  string
 }
