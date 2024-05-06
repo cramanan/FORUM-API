@@ -4,10 +4,8 @@ export const APIendpoint = "http://localhost:8081";
 
 const canActivate = async () => {
     try {
-        const authorized = await fetch(APIendpoint, {
-            credentials: "include",
-        }).then((resp) => resp.ok);
-        return authorized;
+        const authorized = await fetch(APIendpoint, { credentials: "include" });
+        return authorized.ok;
     } catch (reason) {
         console.log(reason);
     }

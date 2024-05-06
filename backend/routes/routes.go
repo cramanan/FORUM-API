@@ -25,7 +25,6 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Unauthorized"
 	} else {
-		//resp.Data = make(map[string]interface{})
 		resp.Data = sess.Values()
 	}
 	SendResponse(writer, resp)
@@ -216,9 +215,7 @@ func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	resp := Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
-		Data: map[string]interface{}{
-			"posts": posts,
-		},
+		Data:       posts,
 	}
 	SendResponse(writer, resp)
 }

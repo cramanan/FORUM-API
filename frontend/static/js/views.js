@@ -125,7 +125,7 @@ class Home extends AbstractView {
             const response = await fetch(`${APIendpoint}/getposts`);
             const datas = await response.json();
             let postsHTML = "";
-            datas.data.posts.forEach((post) => {
+            datas.data.forEach((post) => {
                 postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
             });
             const html = `<nav class="header">
