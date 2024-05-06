@@ -1,4 +1,4 @@
-import { APIendpoint, navigateTo } from "./index.js";
+import { navigateTo } from "./index.js";
 
 class AbstractView {
     constructor() {}
@@ -7,16 +7,20 @@ class AbstractView {
         document.title = title;
     }
 
+    setCSS(css) {
+        document.querySelector("#viewcss").href = css;
+    }
+
     async getHtml() {
         return "";
     }
-
-    setCSS() {}
 }
 
 class Connect extends AbstractView {
     constructor() {
-        super().setTitle("Connect");
+        super();
+        this.setTitle("Connect");
+        this.setCSS("/static/css/connect.css");
         window.HandleLoginSubmit = this.HandleLoginSubmit;
         window.HandleRegisterSubmit = this.HandleRegisterSubmit;
     }
@@ -57,10 +61,6 @@ class Connect extends AbstractView {
         <button type="submit">Register</button>
     </form>
 </div>`;
-    }
-
-    setCSS() {
-        document.querySelector("#viewcss").href = "/static/css/connect.css";
     }
 
     HandleRegisterSubmit(event) {
@@ -106,7 +106,8 @@ class Connect extends AbstractView {
 
 class _404 extends AbstractView {
     constructor() {
-        super().setTitle("404 Not Found");
+        super();
+        this.setTitle("404 Not Found");
     }
 
     async getHtml() {
@@ -116,7 +117,9 @@ class _404 extends AbstractView {
 
 class Home extends AbstractView {
     constructor() {
-        super().setTitle("Real-Time Forum");
+        super();
+        this.setTitle("Real-Time Forum");
+        this.setCSS("/static/css/home.css");
         window.Post = this.Post;
     }
 
@@ -151,10 +154,6 @@ class Home extends AbstractView {
         return "<h1>00PS... Something went wrong ://</h1>";
     }
 
-    setCSS() {
-        document.querySelector("#viewcss").href = "/static/css/home.css";
-    }
-
     async Post(event) {
         event.preventDefault();
         try {
@@ -172,4 +171,4 @@ class Home extends AbstractView {
     }
 }
 
-export { Home, Connect, _404 };
+export { AbstractView, Home, Connect, _404 };

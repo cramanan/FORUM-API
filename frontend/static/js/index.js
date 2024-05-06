@@ -2,7 +2,7 @@ import { Home, Connect, _404 } from "./views.js";
 
 export const APIendpoint = "http://localhost:8081";
 
-const canActivate = async () => {
+const Authorized = async () => {
     try {
         const authorized = await fetch(APIendpoint, { credentials: "include" });
         return authorized.ok;
@@ -14,8 +14,8 @@ const canActivate = async () => {
 
 const router = async () => {
     const routes = [
-        { path: "/", view: Home, canActivate },
-        { path: "/connect", view: Connect, canActivate: async () => true },
+        { path: "/", view: Home, Authorized },
+        { path: "/connect", view: Connect, Authorized: async () => true },
     ];
 
     const potentialMatches = routes.map((route) => {
@@ -31,12 +31,12 @@ const router = async () => {
 
     if (!match) {
         match = {
-            route: { path: "/", view: _404, canActivate: async () => true },
+            route: { path: "/", view: _404, Authorized: async () => true },
             isMatch: false,
         };
     }
 
-    if (!(await match.route.canActivate())) {
+    if (!(await match.route.Authorized())) {
         match = {
             route: { path: "/connect", view: Connect },
             isMatch: true,
@@ -46,7 +46,6 @@ const router = async () => {
 
     const view = new match.route.view();
     document.getElementById("root").innerHTML = await view.getHtml();
-    view.setCSS();
 };
 
 window.addEventListener("popstate", router);
