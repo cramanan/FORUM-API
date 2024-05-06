@@ -68,47 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
     router();
 });
 
-// Register
-window.HandleRegisterSubmit = (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    fetch(`${APIendpoint}/register`, {
-        method: "post",
-        body: data,
-        credentials: "include",
-    })
-        .then((resp) => {
-            if (resp.ok) {
-                navigateTo("/");
-            }
-            return resp.json();
-        })
-        .then((data) => {
-            document.getElementById("register-server-error").textContent =
-                data.message;
-        });
-};
-
-window.HandleLoginSubmit = (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    fetch(`${APIendpoint}/login`, {
-        method: "post",
-        body: data,
-        credentials: "include",
-    })
-        .then((resp) => {
-            if (resp.ok) {
-                navigateTo("/");
-            }
-            return resp.json();
-        })
-        .then((data) => {
-            document.getElementById("login-server-error").textContent =
-                data.message;
-        });
-};
-
 // window.Post = (event) => {
 //     event.preventDefault();
 //     const data = new FormData(event.target);

@@ -17,20 +17,90 @@ class AbstractView {
 class Connect extends AbstractView {
     constructor() {
         super().setTitle("Login");
+        window.HandleLoginSubmit = this.HandleLoginSubmit;
+        window.HandleRegisterSubmit = this.HandleRegisterSubmit;
     }
 
     async getHtml() {
-        try {
-            const html = await fetch("/static/html/connect.html");
-            return await html.text();
-        } catch (reason) {
-            console.log(reason);
-        }
-        return "<h1>00PS... Something went wrong ://</h1>";
+        return `<div id="connect">
+    <form onsubmit="HandleLoginSubmit(event)">
+        <h1>Login</h1>
+        <div id="login-server-error"></div>
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" name="login-email" />
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" name="login-password" />
+        <button type="submit">Login</button>
+    </form>
+    <span id="sep"></span>
+    <form onsubmit="HandleRegisterSubmit(event)">
+        <h1>Register</h1>
+        <div id="register-server-error"></div>
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" name="register-email" />
+        <label for="register-username">Username</label>
+        <input type="text" id="register-username" name="register-username" />
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" name="register-password" />
+        <label for="register-gender">Gender:</label>
+        <select name="register-gender" id="register-gender">
+            <option value="M">M</option>
+            <option value="F">F</option>
+            <option value="O">Other</option>
+        </select>
+        <label for="register-age">Age</label>
+        <input type="number" name="register-age" id="register-age">
+        <label for="register-first-name">First Name</label>
+        <input type="text" name="register-first-name" id="register-first-name">
+        <label for="register-last-name">Last Name</label>
+        <input type="text" name="register-last-name" id="register-last-name">
+        <button type="submit">Register</button>
+    </form>
+</div>`;
     }
 
     setCSS() {
         document.querySelector("#viewcss").href = "/static/css/connect.css";
+    }
+
+    HandleRegisterSubmit(event) {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        fetch(`${APIendpoint}/register`, {
+            method: "post",
+            body: data,
+            credentials: "include",
+        })
+            .then((resp) => {
+                if (resp.ok) {
+                    navigateTo("/");
+                }
+                return resp.json();
+            })
+            .then((data) => {
+                document.getElementById("register-server-error").textContent =
+                    data.message;
+            });
+    }
+
+    HandleLoginSubmit(event) {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        fetch(`${APIendpoint}/login`, {
+            method: "post",
+            body: data,
+            credentials: "include",
+        })
+            .then((resp) => {
+                if (resp.ok) {
+                    navigateTo("/");
+                }
+                return resp.json();
+            })
+            .then((data) => {
+                document.getElementById("login-server-error").textContent =
+                    data.message;
+            });
     }
 }
 
