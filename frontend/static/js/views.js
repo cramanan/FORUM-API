@@ -14,6 +14,8 @@ class AbstractView {
     async getHtml() {
         return "";
     }
+
+    bindListeners() {}
 }
 
 class Connect extends AbstractView {
@@ -21,13 +23,11 @@ class Connect extends AbstractView {
         super();
         this.setTitle("Connect");
         this.setCSS("/static/css/connect.css");
-        window.HandleLoginSubmit = this.HandleLoginSubmit;
-        window.HandleRegisterSubmit = this.HandleRegisterSubmit;
     }
 
     async getHtml() {
         return `<div id="connect">
-    <form onsubmit="HandleLoginSubmit(event)">
+    <form id="login-form">
         <h1>Login</h1>
         <div id="login-server-error"></div>
         <label for="login-email">Email</label>
@@ -37,7 +37,7 @@ class Connect extends AbstractView {
         <button type="submit">Login</button>
     </form>
     <span id="sep"></span>
-    <form onsubmit="HandleRegisterSubmit(event)">
+    <form id="register-form">
         <h1>Register</h1>
         <div id="register-server-error"></div>
         <label for="register-email">Email</label>
@@ -63,44 +63,116 @@ class Connect extends AbstractView {
 </div>`;
     }
 
-    HandleRegisterSubmit(event) {
-        event.preventDefault();
-        const data = new FormData(event.target);
-        fetch(`${APIendpoint}/register`, {
-            method: "post",
-            body: data,
-            credentials: "include",
-        })
-            .then((resp) => {
-                if (resp.ok) {
-                    navigateTo("/");
-                }
-                return resp.json();
-            })
-            .then((data) => {
-                document.getElementById("register-server-error").textContent =
-                    data.message;
-            });
+    bindListeners() {
+        const loginform = document.getElementById("login-form");
+        const registerform = document.getElementById("register-form");
+        loginform?.addEventListener("submit", this.HandleLoginSubmit);
+        registerform?.addEventListener("submit", this.HandleRegisterSubmit);
     }
 
-    HandleLoginSubmit(event) {
+    async HandleRegisterSubmit(event) {
         event.preventDefault();
-        const data = new FormData(event.target);
-        fetch(`${APIendpoint}/login`, {
-            method: "post",
-            body: data,
-            credentials: "include",
-        })
-            .then((resp) => {
-                if (resp.ok) {
-                    navigateTo("/");
-                }
-                return resp.json();
-            })
-            .then((data) => {
-                document.getElementById("login-server-error").textContent =
-                    data.message;
+        try {
+            const data = new FormData(event.target);
+            const response = await fetch(`${APIendpoint}/register`, {
+                method: "post",
+                body: data,
+                credentials: "include",
             });
+            if (response.ok) {
+                navigateTo("/");
+            } else {
+                const server_msg = await response.json();
+                document.getElementById("login-server-error").textContent =
+                    server_msg.message;
+            }
+        } catch (reason) {
+            console.log(reason);
+        }
+    }
+
+    async HandleLoginSubmit(event) {
+        event.preventDefault();
+        try {
+            const data = new FormData(event.target);
+            const response = await fetch(`${APIendpoint}/login`, {
+                method: "post",
+                body: data,
+                credentials: "include",
+            });
+            if (response.ok) {
+                navigateTo("/");
+            } else {
+                const server_msg = await response.json();
+                document.getElementById("login-server-error").textContent =
+                    server_msg.message;
+            }
+        } catch (reason) {
+            console.log(reason);
+        }
+    }
+}
+
+class Home extends AbstractView {
+    constructor() {
+        super();
+        this.setTitle("Real-Time Forum");
+        this.setCSS("/static/css/home.css");
+    }
+
+    async getHtml() {
+        const html = `<nav class="header">
+            <h3><a href="/" id="main-title">REAL-TIME FORUM</a></h3>
+        </nav>
+        <main>
+        <form id="post-form">
+            <label for="post-content">Create a P0ST</label>
+            <textarea name="post-content" id="post-content"></textarea>
+            <button type="submit">P0ST</button>
+        </form>
+        <div id="all-posts">
+            ${await this.fetchPosts()}
+        </div>
+        </main>
+        <footer>
+        </footer>`;
+        return html;
+    }
+
+    bindListeners() {
+        const postform = document.getElementById("post-form");
+        postform?.addEventListener("submit", this.Post);
+    }
+
+    async Post(event) {
+        event.preventDefault();
+        try {
+            const data = new FormData(event.target);
+            const response = await fetch(`${APIendpoint}/post`, {
+                method: "post",
+                body: data,
+                credentials: "include",
+            });
+            if (!response.ok) {
+                console.log(response);
+            }
+        } catch (reason) {
+            console.log(reason);
+        }
+    }
+
+    async fetchPosts() {
+        let postsHTML = "";
+        try {
+            const response = await fetch(`${APIendpoint}/getposts`);
+            const datas = await response.json();
+            datas.data.forEach((post) => {
+                postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
+            });
+        } catch (error) {
+            console.log(error);
+        }
+        return postsHTML;
     }
 }
 
@@ -114,59 +186,4 @@ class _404 extends AbstractView {
         return "<h1>404 NOT FOUND</h1>";
     }
 }
-
-class Home extends AbstractView {
-    constructor() {
-        super();
-        this.setTitle("Real-Time Forum");
-        this.setCSS("/static/css/home.css");
-        window.Post = this.Post;
-    }
-
-    async getHtml() {
-        let postsHTML = "";
-        const html = `<nav class="header">
-                <h3><a href="/" id="main-title">REAL-TIME FORUM</a></h3>
-            </nav>
-            <main>
-            <form id="post-form" onsubmit="Post(event)">
-                <label for="post-content">Create a P0ST</label>
-                <textarea name="post-content" id="post-content"></textarea>
-                <button type="submit">P0ST</button>
-            </form>
-            <div id="all-posts">
-                ${postsHTML}
-            </div>
-        </main>
-        <footer>
-
-        </footer>`;
-        try {
-            const response = await fetch(`${APIendpoint}/getposts`);
-            const datas = await response.json();
-            datas.data.forEach((post) => {
-                postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
-            });
-        } catch (error) {
-            console.log(error);
-        }
-        return html;
-    }
-
-    async Post(event) {
-        event.preventDefault();
-        try {
-            const data = new FormData(event.target);
-            const response = await fetch(`${APIendpoint}/post`, {
-                method: "post",
-                body: data,
-                credentials: "include",
-            });
-            console.log(data);
-        } catch (reason) {
-            console.log(reason);
-        }
-    }
-}
-
 export { AbstractView, Home, Connect, _404 };

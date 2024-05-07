@@ -93,16 +93,9 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	client.Password = string(crypt)
-
 	err = database.AddClient(client)
 	if err != nil {
 		log.Println(err)
-		// if errors.Is(err, sqlite3.ErrConstraintUnique) {
-		// 	resp.StatusCode = http.StatusConflict
-		// 	resp.Message = "Email adress already taken"
-		// 	SendResponse(writer, resp)
-		// 	return
-		// }
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)
@@ -172,7 +165,6 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	client = *comp
 	sess := database.CreateSession(writer, request)
 	sess.Set("uuid", client.Uuid.String())
-	log.Println(sess.Values())
 	sess.Set("username", client.Username)
 	SendResponse(writer, resp)
 }
@@ -240,6 +232,7 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	log.Println("Server Reached")
 	posts, err := database.GetAllPosts()
 	if err != nil {
 		log.Println(err)

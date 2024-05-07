@@ -46,6 +46,7 @@ const router = async () => {
 
     const view = new match.route.view();
     document.getElementById("root").innerHTML = await view.getHtml();
+    view.bindListeners();
 };
 
 window.addEventListener("popstate", router);

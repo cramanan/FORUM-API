@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"database/sql"
 	"net/mail"
+	"time"
 
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -100,8 +101,8 @@ func CreatePost(p models.Post) (err error) {
 	}
 	defer db.Close()
 
-	r := "INSERT INTO posts VALUES(?, ?);"
-	_, err = db.Exec(r, p.UserID, p.Content)
+	r := "INSERT INTO posts VALUES(?, ?, ?);"
+	_, err = db.Exec(r, p.UserID, p.Content, time.Now())
 	return err
 }
 
@@ -113,7 +114,7 @@ func GetAllPosts() ([]models.Post, error) {
 	}
 	defer db.Close()
 
-	r := "SELECT userid, users.username, content FROM posts JOIN users ON users.uuid = posts.userid;"
+	r := "SELECT userid, users.username, content, date FROM posts JOIN users ON users.uuid = posts.userid;"
 	rows, err := db.Query(r)
 	if err != nil {
 		return nil, err
@@ -121,7 +122,7 @@ func GetAllPosts() ([]models.Post, error) {
 
 	for rows.Next() {
 		p := models.Post{}
-		err = rows.Scan(&p.UserID, &p.Username, &p.Content)
+		err = rows.Scan(&p.UserID, &p.Username, &p.Content, &p.Date)
 		if err != nil {
 			return nil, err
 		}
