@@ -45,7 +45,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 	var err error
 
-	client := models.Client{
+	user := models.User{
+		Email:    request.FormValue("register-email"),
 		Username: request.FormValue("register-username"),
 		Password: request.FormValue("register-password"),
 		Gender:   request.FormValue("register-gender"),
@@ -54,11 +55,12 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		LastName:  request.FormValue("register-last-name"),
 	}
 
-	if client.Username == "" ||
-		client.Password == "" ||
-		client.Gender == "" ||
-		client.FirstName == "" ||
-		client.LastName == "" {
+	if user.Email == "" ||
+		user.Username == "" ||
+		user.Password == "" ||
+		user.Gender == "" ||
+		user.FirstName == "" ||
+		user.LastName == "" {
 
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty Credentials"
@@ -66,7 +68,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	client.Email, err = mail.ParseAddress(request.FormValue("register-email"))
+	_, err = mail.ParseAddress(user.Email)
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid Email format"
@@ -74,7 +76,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	client.Uuid, err = uuid.NewV4()
+	raw, err := uuid.NewV4()
 	if err != nil {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
@@ -83,7 +85,9 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	crypt, err := bcrypt.GenerateFromPassword([]byte(client.Password), 11)
+	user.Uuid = raw.String()
+
+	crypt, err := bcrypt.GenerateFromPassword([]byte(user.Password), 11)
 	if err != nil {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
@@ -92,8 +96,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	client.Password = string(crypt)
-	err = database.AddClient(client)
+	user.Password = string(crypt)
+	err = database.AddClient(user)
 	if err != nil {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
@@ -103,8 +107,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	sess := database.CreateSession(writer, request)
-	sess.Set("uuid", client.Uuid.String())
-	sess.Set("username", client.Username)
+	sess.Set("uuid", user.Uuid)
+	sess.Set("username", user.Username)
 	SendResponse(writer, resp)
 }
 
@@ -122,18 +126,19 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	client := models.Client{
+	user := models.User{
+		Email:    request.FormValue("login-email"),
 		Password: request.FormValue("login-password"),
 	}
 
-	if client.Password == "" {
+	if user.Password == "" {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Empty credentials"
 		SendResponse(writer, resp)
 		return
 	}
-	var err error
-	client.Email, err = mail.ParseAddress(request.FormValue("login-email"))
+
+	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid mail format"
@@ -141,31 +146,33 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	comp, err := database.GetClientFromMail(client.Email)
+	comp, err := database.GetClientFromMail(user.Email)
 	if err != nil {
+		log.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			resp.StatusCode = http.StatusUnauthorized
-			resp.Message = "Invalid password or username"
+			resp.Message = "Invalid password or email"
 			SendResponse(writer, resp)
 			return
 		}
 		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(comp.Password), []byte(client.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(comp.Password), []byte(user.Password))
 	if err != nil {
 		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Invalid password or username"
+		resp.Message = "Invalid password or email"
 		SendResponse(writer, resp)
 		return
 	}
 
-	client = *comp
+	user = *comp
 	sess := database.CreateSession(writer, request)
-	sess.Set("uuid", client.Uuid.String())
-	sess.Set("username", client.Username)
+	sess.Set("uuid", user.Uuid)
+	sess.Set("username", user.Username)
 	SendResponse(writer, resp)
 }
 

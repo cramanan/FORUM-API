@@ -3,10 +3,8 @@ package database
 import (
 	"backend/models"
 	"database/sql"
-	"net/mail"
 	"time"
 
-	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -39,14 +37,14 @@ CREATE TABLE IF NOT EXISTS posts (
 	return err
 }
 
-func AddClient(c models.Client) (err error) {
+func AddClient(c models.User) (err error) {
 	db, err := sql.Open("sqlite3", DB)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 	r := "SELECT * FROM users WHERE email = ?;"
-	row := db.QueryRow(r, c.Email.Address)
+	row := db.QueryRow(r, c.Email)
 	err = row.Scan()
 	if err != sql.ErrNoRows {
 		return err
@@ -55,7 +53,7 @@ func AddClient(c models.Client) (err error) {
 	r = "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?, ?);"
 	_, err = db.Exec(r,
 		c.Uuid,
-		c.Email.Address,
+		c.Email,
 		c.Username,
 		c.Password,
 		c.Gender,
@@ -66,7 +64,7 @@ func AddClient(c models.Client) (err error) {
 	return err
 }
 
-func GetClientFromMail(email *mail.Address) (c *models.Client, err error) {
+func GetClientFromMail(email string) (c *models.User, err error) {
 	db, err := sql.Open("sqlite3", DB)
 	if err != nil {
 		return nil, err
@@ -74,23 +72,13 @@ func GetClientFromMail(email *mail.Address) (c *models.Client, err error) {
 	defer db.Close()
 
 	r := "SELECT uuid, email, username, password FROM users WHERE email = ?;"
-	row := db.QueryRow(r, email.Address)
-	var id, str_mail string
-	c = &models.Client{}
-	err = row.Scan(&id, &str_mail, &c.Username, &c.Password)
+	row := db.QueryRow(r, email)
+	c = new(models.User)
+	err = row.Scan(&c.Uuid, &c.Email, &c.Username, &c.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	c.Uuid, err = uuid.FromString(id)
-	if err != nil {
-		return nil, err
-	}
-
-	c.Email, err = mail.ParseAddress(str_mail)
-	if err != nil {
-		return nil, err
-	}
 	return c, err
 }
 
