@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"strconv"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -46,11 +47,10 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	var err error
 
 	user := models.User{
-		Email:    request.FormValue("register-email"),
-		Username: request.FormValue("register-username"),
-		Password: request.FormValue("register-password"),
-		Gender:   request.FormValue("register-gender"),
-		//Add Age
+		Email:     request.FormValue("register-email"),
+		Username:  request.FormValue("register-username"),
+		Password:  request.FormValue("register-password"),
+		Gender:    request.FormValue("register-gender"),
 		FirstName: request.FormValue("register-first-name"),
 		LastName:  request.FormValue("register-last-name"),
 	}
@@ -72,6 +72,15 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		resp.StatusCode = http.StatusUnauthorized
 		resp.Message = "Invalid Email format"
+		SendResponse(writer, resp)
+		return
+	}
+
+	user.Age, err = strconv.Atoi(request.FormValue("register-age"))
+	if err != nil {
+		log.Println(err)
+		resp.StatusCode = http.StatusUnauthorized
+		resp.Message = "Invalid Age format"
 		SendResponse(writer, resp)
 		return
 	}

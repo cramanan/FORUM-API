@@ -24,13 +24,14 @@ username TEXT,
 password TEXT,
 gender TEXT,
 age INTEGER DEFAULT 0,
- firstname TEXT,
- lastname TEXT
+firstname TEXT,
+lastname TEXT
 );
 
 CREATE TABLE IF NOT EXISTS posts (
 	userid TEXT REFERENCES users(uuid),
-	content TEXT
+	content TEXT,
+	date DATE
 );`
 
 	_, err = db.Exec(r)
