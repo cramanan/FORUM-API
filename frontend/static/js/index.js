@@ -18,12 +18,10 @@ const router = async () => {
         { path: "/connect", view: Connect, Authorized: async () => true },
     ];
 
-    const potentialMatches = routes.map((route) => {
-        return {
-            route: route,
-            isMatch: location.pathname === route.path,
-        };
-    });
+    const potentialMatches = routes.map((route) => ({
+        route: route,
+        isMatch: location.pathname === route.path,
+    }));
 
     let match = potentialMatches.find(
         (potentialMatch) => potentialMatch.isMatch

@@ -15,7 +15,7 @@ class AbstractView {
         return "";
     }
 
-    bindListeners() {}
+    async bindListeners() {}
 }
 
 class Connect extends AbstractView {
@@ -139,9 +139,9 @@ class Home extends AbstractView {
         return html;
     }
 
-    bindListeners() {
+    async bindListeners() {
         const postform = document.getElementById("post-form");
-        postform?.addEventListener("submit", this.Post);
+        postform?.addEventListener("submit", (event) => this.Post(event));
     }
 
     async Post(event) {
@@ -153,8 +153,11 @@ class Home extends AbstractView {
                 body: data,
                 credentials: "include",
             });
-            if (!response.ok) {
-                console.log(response);
+
+            if (response.ok) {
+                document.getElementById("post-content").value = "";
+                document.getElementById("all-posts").innerHTML =
+                    await this.fetchPosts();
             }
         } catch (reason) {
             console.log(reason);

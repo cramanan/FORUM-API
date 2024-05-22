@@ -248,7 +248,6 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	log.Println("Server Reached")
 	posts, err := database.GetAllPosts()
 	if err != nil {
 		log.Println(err)
