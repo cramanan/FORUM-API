@@ -261,3 +261,9 @@ func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	}
 	SendResponse(writer, resp)
 }
+
+func Logout(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+}

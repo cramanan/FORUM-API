@@ -123,6 +123,8 @@ class Home extends AbstractView {
     async getHtml() {
         const html = `<nav class="header">
             <h3><a href="/" id="main-title">REAL-TIME FORUM</a></h3>
+            <button id="logout-button" title="Log Out"><img src="/static/images/logout.svg" width="34"/></button>
+            
         </nav>
         <main>
         <form id="post-form">
@@ -131,7 +133,6 @@ class Home extends AbstractView {
             <button type="submit">P0ST</button>
         </form>
         <div id="all-posts">
-            ${await this.fetchPosts()}
         </div>
         </main>
         <footer>
@@ -140,8 +141,14 @@ class Home extends AbstractView {
     }
 
     async bindListeners() {
+        const allposts = document.getElementById("all-posts");
+        allposts?.append(...(await this.fetchPosts()));
+
         const postform = document.getElementById("post-form");
         postform?.addEventListener("submit", (event) => this.Post(event));
+
+        const logout = document.getElementById("logout-button");
+        logout?.addEventListener("click", (event) => this.Logout(event));
     }
 
     async Post(event) {
@@ -156,8 +163,9 @@ class Home extends AbstractView {
 
             if (response.ok) {
                 document.getElementById("post-content").value = "";
-                document.getElementById("all-posts").innerHTML =
-                    await this.fetchPosts();
+                const allposts = document.getElementById("all-posts");
+                allposts.innerHTML = "";
+                allposts.append(...(await this.fetchPosts()));
             }
         } catch (reason) {
             console.log(reason);
@@ -165,17 +173,33 @@ class Home extends AbstractView {
     }
 
     async fetchPosts() {
-        let postsHTML = "";
+        let postsHTML = [];
         try {
             const response = await fetch(`${APIendpoint}/getposts`);
             const datas = await response.json();
             datas.data.forEach((post) => {
-                postsHTML += `<div class="post"><h2>${post.Username}</h2><p>${post.Content}</p></div>`;
+                const div = document.createElement("div");
+                div.className = "post";
+                const h2 = document.createElement("h2");
+                h2.textContent = post.Username;
+                const p = document.createElement("p");
+                p.textContent = post.Content;
+                div.append(h2, p);
+                postsHTML.push(div);
             });
         } catch (error) {
             console.log(error);
         }
         return postsHTML;
+    }
+
+    async Logout() {
+        try {
+            const response = await fetch(`${APIendpoint}/logout`, {
+                credentials: "include",
+            });
+            navigateTo("/connect");
+        } catch (reason) {}
     }
 }
 

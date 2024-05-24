@@ -20,6 +20,7 @@ func main() {
 	mux.HandleFunc("/login", routes.LogClientIn)
 	mux.HandleFunc("/getposts", routes.GetPosts)
 	mux.HandleFunc("/post", routes.Post)
+	mux.HandleFunc("/logout", routes.Logout)
 	server := http.Server{
 		Addr:    ":8081",
 		Handler: mux,
