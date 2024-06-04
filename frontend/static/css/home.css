@@ -22,3 +22,11 @@ body {
     border: none;
     cursor: pointer;
 }
+
+#sidebar{
+    background-color: #fff;
+    position: fixed;
+    top: 80px;
+    right: 0;
+    height: 100%;
+}
