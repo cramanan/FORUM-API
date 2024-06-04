@@ -1,10 +1,10 @@
 import { Home, Connect, _404, Profile } from "./views.js";
 
-const APIendpoint = "localhost:8081";
+const APIendpoint = "/api";
 
 const Authorized = async () => {
   try {
-    const authorized = await fetch(`http://${APIendpoint}`, {
+    const authorized = await fetch(APIendpoint, {
       credentials: "include",
     });
     return authorized.ok;

@@ -1,14 +1,14 @@
 package database
 
 import (
-	"backend/models"
 	"database/sql"
+	"real-time-forum/api/models"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const DB = "data/database.sqlite"
+const DB = "api/data/database.sqlite"
 
 func InitDB() (err error) {
 	db, err := sql.Open("sqlite3", DB)

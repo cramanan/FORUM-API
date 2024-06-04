@@ -1,13 +1,13 @@
 package routes
 
 import (
-	"backend/database"
-	"backend/models"
 	"database/sql"
 	"errors"
 	"log"
 	"net/http"
 	"net/mail"
+	"real-time-forum/api/database"
+	"real-time-forum/api/models"
 	"strconv"
 
 	"github.com/gofrs/uuid"
