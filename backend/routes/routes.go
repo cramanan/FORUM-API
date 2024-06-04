@@ -11,13 +11,24 @@ import (
 	"strconv"
 
 	"github.com/gofrs/uuid"
+	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 )
 
 func Root(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	resp := Response{
+	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
@@ -34,7 +45,7 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	resp := Response{
+	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
@@ -124,7 +135,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	resp := Response{
+	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
@@ -188,7 +199,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 func Post(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	resp := Response{
+	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
@@ -248,13 +259,14 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	// Check session
 	posts, err := database.GetAllPosts()
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	resp := Response{
+	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 		Data:       posts,
@@ -266,4 +278,36 @@ func Logout(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
 	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 
+}
+
+func WS(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
+	writer.Header().Set("Access-Control-Allow-Credentials", "true")
+	_, err := database.GetSession(writer, request)
+	if err != nil {
+		// resp.StatusCode = http.StatusUnauthorized
+		// resp.Message = "Unauthorized"
+		SendResponse(writer, nil)
+		return
+	}
+
+	type WSMessage struct {
+		Type string      `json:"type"`
+		Data interface{} `json:"data"`
+	}
+
+	conn, err := upgrader.Upgrade(writer, request, nil)
+	if err != nil {
+		log.Println("Error")
+		SendResponse(writer, nil)
+		return
+	}
+
+	go func() {
+		conn.WriteJSON(WSMessage{
+			Type: "log",
+		})
+		for {
+		}
+	}()
 }

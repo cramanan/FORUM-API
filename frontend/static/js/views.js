@@ -177,6 +177,8 @@ class Home extends View {
     const logout = document.getElementById("logout-button");
     logout?.addEventListener("click", (event) => this.Logout(event));
 
+    const conn = new WebSocket(`ws://${APIendpoint}/ws`);
+    conn.onmessage = (msg) => console.log(JSON.parse(msg.data));
     // const users = document.getElementById("users");
     // console.log(users);
   }

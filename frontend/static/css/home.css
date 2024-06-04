@@ -29,4 +29,10 @@ body {
     top: 80px;
     right: 0;
     height: 100%;
+    width: 100px;
+    transition: width 1s;
+}
+
+#sidebar.closed{
+    width: 0;
 }
