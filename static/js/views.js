@@ -97,7 +97,7 @@ class Connect extends View {
     event.preventDefault();
     try {
       const data = new FormData(event.target);
-      const response = await fetch(`${APIendpoint}/register`, {
+      const response = await fetch(`http://${APIendpoint}/register`, {
         method: "post",
         body: data,
         credentials: "include",
@@ -118,7 +118,7 @@ class Connect extends View {
     event.preventDefault();
     try {
       const data = new FormData(event.target);
-      const response = await fetch(`${APIendpoint}/login`, {
+      const response = await fetch(`http://${APIendpoint}/login`, {
         method: "post",
         body: data,
         credentials: "include",
@@ -187,7 +187,7 @@ class Home extends View {
     event.preventDefault();
     try {
       const data = new FormData(event.target);
-      const response = await fetch(`${APIendpoint}/post`, {
+      const response = await fetch(`http://${APIendpoint}/post`, {
         method: "post",
         body: data,
         credentials: "include",
@@ -227,7 +227,7 @@ class Home extends View {
 
   async Logout() {
     try {
-      const response = await fetch(`${APIendpoint}/logout`, {
+      const response = await fetch(`http://${APIendpoint}/logout`, {
         credentials: "include",
       });
       navigateTo("/connect");

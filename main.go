@@ -19,7 +19,7 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")
 	})
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/static"))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	mux.HandleFunc("/api/", routes.Root)
 	mux.HandleFunc("/api/register", routes.RegisterClient)
