@@ -205,9 +205,9 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	p := models.Post{}
-	assertion, ok := sess.Get("uuid")
+	assertion, ok := sess.Get("b64")
 	if !ok {
-		log.Println("UUID not found")
+		log.Println("Base 64 ID not found")
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)

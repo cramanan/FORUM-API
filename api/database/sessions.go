@@ -80,8 +80,8 @@ func (st *session_store) timeout_cycle() {
 			if sess.cookie.Expires.Before(time.Now()) {
 				st.Lock()
 				delete(st.sessions, key)
-				fmt.Println("Deleted", key)
 				st.Unlock()
+				fmt.Println("Deleted", key)
 			}
 		}
 	}
