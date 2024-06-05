@@ -10,21 +10,21 @@ import (
 )
 
 type Session struct {
-	sync.RWMutex
+	mx     sync.RWMutex
 	cookie http.Cookie
 	values map[string]any
 }
 
 func (sess *Session) Get(key string) (value any, ok bool) {
-	sess.RLock()
-	defer sess.RUnlock()
+	sess.mx.RLock()
+	defer sess.mx.RUnlock()
 	value, ok = sess.values[key]
 	return value, ok
 }
 
 func (sess *Session) Set(key string, value any) {
-	sess.Lock()
-	defer sess.Unlock()
+	sess.mx.Lock()
+	defer sess.mx.Unlock()
 	sess.values[key] = value
 }
 
@@ -33,7 +33,7 @@ func (sess *Session) Values() map[string]any {
 }
 
 func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) {
-	cookie, err := r.Cookie(CookieName)
+	cookie, err := r.Cookie(cookie_name)
 	if err != nil {
 		return nil, err
 	}
@@ -48,19 +48,19 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	s = new(Session)
 	s.values = make(map[string]any)
-	sessid := utils.Generate_id_64(16)
+	sessid := utils.GenerateBase64ID(16)
 	cookie := http.Cookie{
-		Name:     CookieName,
+		Name:     cookie_name,
 		Value:    sessid,
-		Expires:  time.Now().Add(SessionTimeout),
+		Expires:  time.Now().Add(session_timeout),
 		Path:     "/",
 		HttpOnly: false,
 	}
 	http.SetCookie(w, &cookie)
-	private_store.Lock()
+	private_store.mx.Lock()
 	s.cookie = cookie
 	private_store.sessions[sessid] = s
-	private_store.Unlock()
+	private_store.mx.Unlock()
 	return s
 }
 
@@ -69,18 +69,18 @@ func (sess *Session) End() {
 }
 
 type session_store struct {
-	sync.RWMutex
+	mx       sync.RWMutex
 	sessions map[string]*Session
 }
 
 func (st *session_store) timeout_cycle() {
 	for {
-		time.Sleep(SessionTimeout)
+		time.Sleep(session_timeout)
 		for key, sess := range st.sessions {
 			if sess.cookie.Expires.Before(time.Now()) {
-				st.Lock()
+				st.mx.Lock()
 				delete(st.sessions, key)
-				st.Unlock()
+				st.mx.Unlock()
 				fmt.Println("Deleted", key)
 			}
 		}
@@ -94,8 +94,9 @@ func new_store() *session_store {
 	return store
 }
 
-var (
-	private_store  = new_store()
-	CookieName     = "session-id"
-	SessionTimeout = time.Minute * 10
+var private_store = new_store()
+
+const (
+	cookie_name     = "session-id"
+	session_timeout = time.Minute * 10
 )

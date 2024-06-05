@@ -92,7 +92,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user.B64 = utils.Generate_id_64(5)
+	user.B64 = utils.GenerateBase64ID(5)
 
 	crypt, err := bcrypt.GenerateFromPassword([]byte(user.Password), 11)
 	if err != nil {

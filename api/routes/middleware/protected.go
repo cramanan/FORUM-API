@@ -5,9 +5,9 @@ import (
 	"real-time-forum/api/database"
 )
 
-type ContextKey string
+//type context_key string
 
-const ContextSessionKey ContextKey = "session"
+//const ContextSessionKey context_key = "session"
 
 func Protected(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
