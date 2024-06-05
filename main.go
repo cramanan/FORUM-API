@@ -8,12 +8,13 @@ import (
 )
 
 func main() {
-
 	err := database.InitDB()
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
+	log.Println(database.GetAllUsers())
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

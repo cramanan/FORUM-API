@@ -120,3 +120,28 @@ func GetAllPosts() ([]models.Post, error) {
 
 	return res, nil
 }
+
+func GetAllUsers() ([]models.User, error) {
+	res := []models.User{}
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	r := "SELECT username, uuid FROM users;"
+	rows, err := db.Query(r)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		u := models.User{}
+		err = rows.Scan(&u.Username, &u.Uuid)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, u)
+	}
+	return res, nil
+}

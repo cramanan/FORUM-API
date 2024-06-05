@@ -145,27 +145,28 @@ class Home extends View {
 
   async getHtml() {
     const html = `
-    <nav class="header">
+    <header class="header">
         <h3><a href="/" id="main-title" data-link>REAL-TIME FORUM</a></h3>
         <button id="logout-button" title="Log Out"><img src="/static/images/logout.svg" width="34"/></button>
-    </nav>
-    <aside id="sidebar">
+    </header>
+    <aside id="sidebar" class="closed">
       <h2>Users :</h2>
       <ul id="users"></ul>
     </aside>
     <main>
-    <form id="post-form">
-        <label for="post-content">Create a P0ST</label>
-        <textarea name="post-content" id="post-content"></textarea>
-        <button type="submit">P0ST</button>
-    </form>
-    <div id="all-posts">
-    </div>
+      <form id="post-form">
+          <label for="post-content">Create a P0ST</label>
+          <textarea name="post-content" id="post-content"></textarea>
+          <button type="submit">P0ST</button>
+      </form>
+      <div id="all-posts"></div>
     </main>
     <footer>
     </footer>`;
     return html;
   }
+
+  async fetchUsers() {}
 
   async bindListeners() {
     const allposts = document.getElementById("all-posts");
@@ -174,11 +175,21 @@ class Home extends View {
     const postform = document.getElementById("post-form");
     postform?.addEventListener("submit", (event) => this.Post(event));
 
-    const logout = document.getElementById("logout-button");
-    logout?.addEventListener("click", (event) => this.Logout(event));
+    // const logout = document.getElementById("logout-button");
+    // logout?.addEventListener("click", (event) => this.Logout(event));
 
-    const conn = new WebSocket(`ws://${APIendpoint}/ws`);
-    conn.onmessage = (msg) => console.log(JSON.parse(msg.data));
+    const sidebar = document.getElementById("sidebar");
+    const closeBtn = document.createElement("button");
+    closeBtn.id = "closeBtn";
+    closeBtn.textContent = "<";
+    closeBtn.onclick = () => {
+      sidebar.classList.toggle("closed");
+      closeBtn.textContent = closeBtn.textContent === "<" ? ">" : "<";
+    };
+    sidebar.prepend(closeBtn);
+
+    // const conn = new WebSocket(`ws://${APIendpoint}/ws`);
+    // conn.onmessage = (msg) => console.log(JSON.parse(msg.data));
     // const users = document.getElementById("users");
     // console.log(users);
   }

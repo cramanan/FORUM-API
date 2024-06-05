@@ -106,5 +106,5 @@ func new_store() *session_store {
 var (
 	private_store  = new_store()
 	CookieName     = "session-id"
-	SessionTimeout = time.Hour * 2
+	SessionTimeout = time.Minute * 10
 )
