@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"real-time-forum/api/database"
 	"real-time-forum/api/routes"
+	"real-time-forum/api/routes/middleware"
 )
 
 func main() {
@@ -20,15 +21,14 @@ func main() {
 	})
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	mux.HandleFunc("/api/", routes.Root)
+	mux.Handle("/api/", middleware.Protected(routes.Root))
 	mux.HandleFunc("/api/register", routes.RegisterClient)
 	mux.HandleFunc("/api/login", routes.LogClientIn)
-	mux.HandleFunc("/api/getposts", routes.GetPosts)
-	mux.HandleFunc("/api/post", routes.Post)
-	mux.HandleFunc("/api/users", routes.AllUsers)
+	mux.Handle("/api/getposts", middleware.Protected(routes.GetPosts))
+	mux.Handle("/api/post", middleware.Protected(routes.Post))
+	mux.Handle("/api/ws", middleware.Protected(routes.WS))
 
 	// mux.HandleFunc("/logout", routes.Logout)
-	mux.HandleFunc("/api/ws", routes.WS)
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: mux,

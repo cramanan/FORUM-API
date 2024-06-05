@@ -2,9 +2,7 @@ package routes
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -216,7 +214,7 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 
 	p.UserID, ok = assertion.(string)
 	if !ok {
-		log.Println("UUID not a string")
+		log.Println("UserId not a string")
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)
@@ -258,18 +256,9 @@ func GetPosts(writer http.ResponseWriter, request *http.Request) {
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) {
-
 }
 
 func WS(writer http.ResponseWriter, request *http.Request) {
-	_, err := database.GetSession(writer, request)
-	if err != nil {
-		// resp.StatusCode = http.StatusUnauthorized
-		// resp.Message = "Unauthorized"
-		SendResponse(writer, nil)
-		return
-	}
-
 	type WSMessage struct {
 		Type string      `json:"type"`
 		Data interface{} `json:"data"`
@@ -284,24 +273,10 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 
 	go func() {
 		conn.WriteJSON(WSMessage{
-			Type: "log",
+			Type: "ping",
 		})
 		for {
+
 		}
 	}()
-}
-
-func AllUsers(writer http.ResponseWriter, request *http.Request) {
-	arr, err := database.GetAllUsers()
-	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	result := []string{}
-	for _, value := range arr {
-		result = append(result, fmt.Sprintf("%s#%s", value.Username, value.B64))
-	}
-
-	json.NewEncoder(writer).Encode(result)
 }

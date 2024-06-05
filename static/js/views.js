@@ -188,10 +188,10 @@ class Home extends View {
     };
     sidebar.prepend(closeBtn);
 
-    // const conn = new WebSocket(`ws://${APIendpoint}/ws`);
-    // conn.onmessage = (msg) => console.log(JSON.parse(msg.data));
-    // const users = document.getElementById("users");
-    // console.log(users);
+    const conn = new WebSocket(`ws://${APIendpoint}/ws`);
+    conn.onmessage = (msg) => console.log(JSON.parse(msg.data));
+    const users = document.getElementById("users");
+    console.log(users);
   }
 
   async Post(event) {

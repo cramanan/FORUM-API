@@ -4,7 +4,7 @@ const APIendpoint = "localhost:8080/api";
 
 const Authorized = async () => {
   try {
-    const authorized = await fetch(`http://${APIendpoint}/api`, {
+    const authorized = await fetch(`http://${APIendpoint}`, {
       credentials: "include",
     });
     return authorized.ok;
