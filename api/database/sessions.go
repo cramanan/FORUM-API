@@ -3,20 +3,11 @@ package database
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
+	"real-time-forum/api/utils"
 	"sync"
 	"time"
 )
-
-func generate_id_64(lenght int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-")
-	s := make([]rune, lenght)
-	for i := range s {
-		s[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(s)
-}
 
 type Session struct {
 	sync.RWMutex
@@ -57,7 +48,7 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	s = new(Session)
 	s.values = make(map[string]any)
-	sessid := generate_id_64(16)
+	sessid := utils.Generate_id_64(16)
 	cookie := http.Cookie{
 		Name:     CookieName,
 		Value:    sessid,

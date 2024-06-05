@@ -14,8 +14,6 @@ func main() {
 		return
 	}
 
-	log.Println(database.GetAllUsers())
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")
@@ -27,6 +25,8 @@ func main() {
 	mux.HandleFunc("/api/login", routes.LogClientIn)
 	mux.HandleFunc("/api/getposts", routes.GetPosts)
 	mux.HandleFunc("/api/post", routes.Post)
+	mux.HandleFunc("/api/users", routes.AllUsers)
+
 	// mux.HandleFunc("/logout", routes.Logout)
 	mux.HandleFunc("/api/ws", routes.WS)
 	server := http.Server{

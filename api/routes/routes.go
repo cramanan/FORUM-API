@@ -2,15 +2,17 @@ package routes
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
+	"real-time-forum/api/utils"
 	"strconv"
 
-	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,8 +28,6 @@ var (
 )
 
 func Root(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
@@ -43,8 +43,6 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
@@ -96,16 +94,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	raw, err := uuid.NewV4()
-	if err != nil {
-		log.Println(err)
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Something Went Wrong :/ Try again later."
-		SendResponse(writer, resp)
-		return
-	}
-
-	user.Uuid = raw.String()
+	user.B64 = utils.Generate_id_64(5)
 
 	crypt, err := bcrypt.GenerateFromPassword([]byte(user.Password), 11)
 	if err != nil {
@@ -127,14 +116,12 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	sess := database.CreateSession(writer, request)
-	sess.Set("uuid", user.Uuid)
+	sess.Set("b64", user.B64)
 	sess.Set("username", user.Username)
 	SendResponse(writer, resp)
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
@@ -191,14 +178,12 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	user = *comp
 	sess := database.CreateSession(writer, request)
-	sess.Set("uuid", user.Uuid)
+	sess.Set("b64", user.B64)
 	sess.Set("username", user.Username)
 	SendResponse(writer, resp)
 }
 
 func Post(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	resp := &Response{
 		StatusCode: http.StatusOK,
 		Message:    "OK",
@@ -257,8 +242,6 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 }
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	// Check session
 	posts, err := database.GetAllPosts()
 	if err != nil {
@@ -275,14 +258,10 @@ func GetPosts(writer http.ResponseWriter, request *http.Request) {
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 
 }
 
 func WS(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Access-Control-Allow-Origin", request.Header.Get("Origin"))
-	writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	_, err := database.GetSession(writer, request)
 	if err != nil {
 		// resp.StatusCode = http.StatusUnauthorized
@@ -310,4 +289,19 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 		for {
 		}
 	}()
+}
+
+func AllUsers(writer http.ResponseWriter, request *http.Request) {
+	arr, err := database.GetAllUsers()
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result := []string{}
+	for _, value := range arr {
+		result = append(result, fmt.Sprintf("%s#%s", value.Username, value.B64))
+	}
+
+	json.NewEncoder(writer).Encode(result)
 }

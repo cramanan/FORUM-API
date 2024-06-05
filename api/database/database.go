@@ -18,7 +18,7 @@ func InitDB() (err error) {
 	defer db.Close()
 
 	r := `CREATE TABLE IF NOT EXISTS users (
-uuid TEXT PRIMARY KEY,
+b64 TEXT PRIMARY KEY,
 email TEXT NOT NULL UNIQUE,
 username TEXT,
 password TEXT,
@@ -29,7 +29,7 @@ lastname TEXT
 );
 
 CREATE TABLE IF NOT EXISTS posts (
-	userid TEXT REFERENCES users(uuid),
+	userid TEXT REFERENCES users(b64),
 	content TEXT,
 	date DATE
 );`
@@ -53,7 +53,7 @@ func AddClient(c models.User) (err error) {
 
 	r = "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?, ?);"
 	_, err = db.Exec(r,
-		c.Uuid,
+		c.B64,
 		c.Email,
 		c.Username,
 		c.Password,
@@ -72,10 +72,10 @@ func GetClientFromMail(email string) (c *models.User, err error) {
 	}
 	defer db.Close()
 
-	r := "SELECT uuid, email, username, password FROM users WHERE email = ?;"
+	r := "SELECT b64, email, username, password FROM users WHERE email = ?;"
 	row := db.QueryRow(r, email)
 	c = new(models.User)
-	err = row.Scan(&c.Uuid, &c.Email, &c.Username, &c.Password)
+	err = row.Scan(&c.B64, &c.Email, &c.Username, &c.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func GetAllPosts() ([]models.Post, error) {
 	}
 	defer db.Close()
 
-	r := "SELECT userid, users.username, content, date FROM posts JOIN users ON users.uuid = posts.userid;"
+	r := "SELECT userid, users.username, content, date FROM posts JOIN users ON users.b64 = posts.userid;"
 	rows, err := db.Query(r)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func GetAllUsers() ([]models.User, error) {
 	}
 	defer db.Close()
 
-	r := "SELECT username, uuid FROM users;"
+	r := "SELECT username, b64 FROM users;"
 	rows, err := db.Query(r)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func GetAllUsers() ([]models.User, error) {
 
 	for rows.Next() {
 		u := models.User{}
-		err = rows.Scan(&u.Username, &u.Uuid)
+		err = rows.Scan(&u.Username, &u.B64)
 		if err != nil {
 			return nil, err
 		}

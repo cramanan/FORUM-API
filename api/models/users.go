@@ -1,7 +1,7 @@
 package models
 
 type User struct {
-	Uuid      string
+	B64       string
 	Email     string
 	Username  string
 	Password  string
