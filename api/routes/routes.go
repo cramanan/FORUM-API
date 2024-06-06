@@ -1,9 +1,7 @@
 package routes
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"net/mail"
@@ -47,15 +45,16 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 	user := models.User{
 		Email:     request.FormValue("register-email"),
 		Name:      request.FormValue("register-username"),
-		Password:  request.FormValue("register-password"),
 		Gender:    request.FormValue("register-gender"),
 		FirstName: request.FormValue("register-first-name"),
 		LastName:  request.FormValue("register-last-name"),
 	}
 
+	password := request.FormValue("register-password")
+
 	if user.Email == "" ||
 		user.Name == "" ||
-		user.Password == "" ||
+		password == "" ||
 		user.Gender == "" ||
 		user.FirstName == "" ||
 		user.LastName == "" {
@@ -80,13 +79,13 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 
 	user.B64 = utils.GenerateBase64ID(5)
 
-	crypt, err := bcrypt.GenerateFromPassword([]byte(user.Password), 11)
+	crypt, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	user.Password = string(crypt)
+	user.SetPassword(string(crypt))
 	err = database.AddUser(user)
 	if err != nil {
 		log.Println(err)
@@ -106,11 +105,12 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	user := models.User{
-		Email:    request.FormValue("login-email"),
-		Password: request.FormValue("login-password"),
+		Email: request.FormValue("login-email"),
 	}
 
-	if user.Password == "" {
+	password := request.FormValue("login-password")
+
+	if password == "" {
 		log.Println("No Password")
 		return
 	}
@@ -118,27 +118,24 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
+		log.Println("INVALID EMAIL")
 		return
 	}
 
-	comp, err := database.GetUserFromMail(user.Email)
+	comp, err := database.GetPasswordFromMail(user.Email)
 	if err != nil {
 		log.Println(err)
-		if errors.Is(err, sql.ErrNoRows) {
-			writer.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		writer.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(comp.Password), []byte(user.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(comp), []byte(password))
 	if err != nil {
+		log.Println("INVALID PASSWORD")
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	user = *comp
 	sess := database.CreateSession(writer, request)
 	sess.SetID(user.B64)
 	sess.SetName(user.Name)

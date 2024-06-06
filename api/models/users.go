@@ -1,17 +1,20 @@
 package models
 
 type User struct {
-	B64       string
-	Email     string
-	Name      string
-	Password  string
-	Gender    string
-	Age       int
-	FirstName string
-	LastName  string
+	B64       string `json:"b64"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	password  string
+	Gender    string `json:"gender"`
+	Age       int    `json:"age"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
 }
 
-type ProtectedUser struct {
-	B64  string `json:"b64"`
-	Name string `json:"name"`
+func (u *User) GetPassword() string {
+	return u.password
+}
+
+func (u *User) SetPassword(password string) {
+	u.password = password
 }

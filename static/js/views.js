@@ -240,9 +240,9 @@ class Home extends View {
         const div = document.createElement("div");
         div.className = "post";
         const h2 = document.createElement("h2");
-        h2.textContent = post.Username;
+        h2.textContent = post.username;
         const p = document.createElement("p");
-        p.textContent = post.Content;
+        p.textContent = post.content;
         div.append(h2, p);
         postsHTML.push(div);
       });

@@ -53,7 +53,7 @@ func AddUser(u models.User) (err error) {
 		u.B64,
 		u.Email,
 		u.Name,
-		u.Password,
+		u.GetPassword(),
 		u.Gender,
 		u.Age,
 		u.FirstName,
@@ -62,22 +62,21 @@ func AddUser(u models.User) (err error) {
 	return err
 }
 
-func GetUserFromMail(email string) (c *models.User, err error) {
+func GetPasswordFromMail(email string) (password string, err error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer db.Close()
 
-	r := "SELECT b64, email, name, password FROM users WHERE email = ?;"
+	r := "SELECT password FROM users WHERE email = ?;"
 	row := db.QueryRow(r, email)
-	c = new(models.User)
-	err = row.Scan(&c.B64, &c.Email, &c.Name, &c.Password)
+	err = row.Scan(&password)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return c, err
+	return password, err
 }
 
 func CreatePost(p models.Post) (err error) {
@@ -119,8 +118,8 @@ func GetAllPosts() ([]models.Post, error) {
 	return res, nil
 }
 
-func GetAllUsers() ([]models.ProtectedUser, error) {
-	res := []models.ProtectedUser{}
+func GetAllUsers() ([]models.User, error) {
+	res := []models.User{}
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return nil, err
@@ -134,7 +133,7 @@ func GetAllUsers() ([]models.ProtectedUser, error) {
 	}
 
 	for rows.Next() {
-		u := models.ProtectedUser{}
+		u := models.User{}
 		err = rows.Scan(&u.B64, &u.Name)
 		if err != nil {
 			return nil, err
