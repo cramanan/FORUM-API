@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+/*
+The Session type: a stucture that holds user information.
+It is used in the in-memory private store.
+*/
 type Session struct {
 	b64       string
 	user_id   string
@@ -16,23 +20,31 @@ type Session struct {
 	expires   time.Time
 }
 
+/*The Session ID setter.*/
 func (sess *Session) SetID(key string) {
 	sess.user_id = key
 }
 
+/*The Session ID getter.*/
 func (sess *Session) GetID() string {
 	return sess.user_id
 }
 
+/*The Session user_name setter.*/
 func (sess *Session) SetName(key string) {
 	sess.user_name = key
 }
 
+/*The Session user_name getter.*/
 func (sess *Session) GetName() string {
 	return sess.user_name
 }
 
-func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
+/*
+The Session constructor function:
+creates a session for your http server.
+*/
+func NewSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	s = new(Session)
 	sessid := utils.GenerateBase64ID(16)
 	s.b64 = sessid
@@ -51,6 +63,7 @@ func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	return s
 }
 
+/*The Session Getter: it operates by searching the store with the request.cookie*/
 func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) {
 	cookie, err := r.Cookie(cookie_name)
 	if err != nil {
@@ -64,12 +77,17 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 	return s, nil
 }
 
+/*The session "ender" / killer*/
 func (sess *Session) End() {
 	private_store.mx.Lock()
 	delete(private_store.sessions, sess.b64)
 	private_store.mx.Unlock()
 }
 
+/*
+The private session_store type,
+it holds a map of *Sessions and handles concurency with a sync.RWMutex
+*/
 type session_store struct {
 	mx       sync.RWMutex
 	sessions map[string]*Session
@@ -100,5 +118,5 @@ var private_store = new_store()
 
 const (
 	cookie_name     = "session-id"
-	session_timeout = time.Minute * 10
+	session_timeout = time.Hour * 10
 )

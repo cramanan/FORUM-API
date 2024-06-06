@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"io"
-	"log"
 	"net/mail"
 	"os"
 	"real-time-forum/api/models"
@@ -11,11 +10,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const db_path = "api/data/database.sqlite"
-const db_sql = "api/data/db.sql"
+const (
+	db_path = "api/data/database.sqlite"
+	db_sql  = "api/data/db.sql"
+)
 
 func InitDB() (err error) {
-
 	f, err := os.Open(db_sql)
 	if err != nil {
 		return err
@@ -95,7 +95,6 @@ func CreatePost(p models.Post) (err error) {
 }
 
 func GetAllPosts() ([]models.Post, error) {
-	log.Println("Called")
 	res := []models.Post{}
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
@@ -110,7 +109,6 @@ func GetAllPosts() ([]models.Post, error) {
 	}
 
 	for rows.Next() {
-		log.Println("Range")
 		p := models.Post{}
 		err = rows.Scan(&p.UserID, &p.Username, &p.Content, &p.Date)
 		if err != nil {

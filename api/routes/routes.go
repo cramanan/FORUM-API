@@ -90,9 +90,10 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	sess := database.CreateSession(writer, request)
+	sess := database.NewSession(writer, request)
 	sess.SetID(user.B64)
 	sess.SetName(user.Name)
+	log.Println(sess)
 }
 
 func LogUserIn(writer http.ResponseWriter, request *http.Request) {
@@ -132,7 +133,7 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	sess := database.CreateSession(writer, request)
+	sess := database.NewSession(writer, request)
 	sess.SetID(b64)
 	sess.SetName(name)
 }

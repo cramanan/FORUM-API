@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS posts (
 	date DATE
 );
 
-CREATE TABLE IF NOT EXISTS messages (
-	message_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	sender_id TEXT REFERENCES users(b64),
-	receiver_id TEXT REFERENCES users(b64),
-	content TEXT,
-	time_stamp DATE
-)
+-- CREATE TABLE IF NOT EXISTS messages (
+-- 	message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- 	sender_id TEXT REFERENCES users(b64),
+-- 	receiver_id TEXT REFERENCES users(b64),
+-- 	content TEXT,
+-- 	time_stamp DATE
+-- )

@@ -24,17 +24,18 @@ func main() {
 	mux.Handle("/api/", middleware.Protected(routes.Root))
 	mux.HandleFunc("/api/register", routes.RegisterUser)
 	mux.HandleFunc("/api/login", routes.LogUserIn)
+	mux.Handle("/api/logout", middleware.Protected(routes.Logout))
 	mux.Handle("/api/getposts", middleware.Protected(routes.GetPosts))
 	mux.Handle("/api/getusers", middleware.Protected(routes.GetUsers))
 	mux.Handle("/api/post", middleware.Protected(routes.Post))
 	mux.Handle("/api/ws", middleware.Protected(routes.WS))
-	mux.Handle("/api/logout", middleware.Protected(routes.Logout))
+
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
 
-	log.Println("Server up")
+	log.Println("Server up and running...")
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Println("Error here")
