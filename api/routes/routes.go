@@ -8,6 +8,7 @@ import (
 	"net/mail"
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
+	"real-time-forum/api/routes/middleware"
 	"real-time-forum/api/utils"
 	"strconv"
 
@@ -194,48 +195,16 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	sess, err := database.GetSession(writer, request)
-	if err != nil {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Unauthorized"
-		SendResponse(writer, resp)
-		return
-	}
-
-	p := models.Post{}
-	assertion, ok := sess.Get("b64")
+	session, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
 	if !ok {
-		log.Println("Base 64 ID not found")
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Internal Server Error"
 		SendResponse(writer, resp)
 		return
 	}
 
-	p.UserID, ok = assertion.(string)
-	if !ok {
-		log.Println("UserId not a string")
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-		SendResponse(writer, resp)
-		return
-	}
+	log.Println(session)
 
-	p.Content = request.FormValue("post-content")
-	if p.Content == "" {
-		log.Println("Empty content")
-		resp.StatusCode = http.StatusBadRequest
-		resp.Message = "Bad Request"
-		SendResponse(writer, resp)
-		return
-	}
-
-	err = database.CreatePost(p)
-	if err != nil {
-		log.Println(err)
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-	}
 	SendResponse(writer, resp)
 }
 

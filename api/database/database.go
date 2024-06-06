@@ -7,14 +7,16 @@ import (
 	"real-time-forum/api/models"
 	"time"
 
+	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const DB = "api/data/database.sqlite"
+const db_path = "api/data/database.sqlite"
+const db_sql = "api/data/db.sql"
 
 func InitDB() (err error) {
 
-	f, err := os.Open("api/data/db.sql")
+	f, err := os.Open(db_sql)
 	if err != nil {
 		return err
 	}
@@ -25,7 +27,7 @@ func InitDB() (err error) {
 		return err
 	}
 
-	db, err := sql.Open("sqlite3", DB)
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return err
 	}
@@ -36,7 +38,7 @@ func InitDB() (err error) {
 }
 
 func AddClient(c models.User) (err error) {
-	db, err := sql.Open("sqlite3", DB)
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return err
 	}
@@ -63,7 +65,7 @@ func AddClient(c models.User) (err error) {
 }
 
 func GetClientFromMail(email string) (c *models.User, err error) {
-	db, err := sql.Open("sqlite3", DB)
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return nil, err
 	}
@@ -81,20 +83,26 @@ func GetClientFromMail(email string) (c *models.User, err error) {
 }
 
 func CreatePost(p models.Post) (err error) {
-	db, err := sql.Open("sqlite3", DB)
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	r := "INSERT INTO posts VALUES(?, ?, ?);"
-	_, err = db.Exec(r, p.UserID, p.Content, time.Now())
+	r := "INSERT INTO posts VALUES(?, ?, ?, ?);"
+
+	rawID, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(r, rawID.String(), p.UserID, p.Content, time.Now())
 	return err
 }
 
 func GetAllPosts() ([]models.Post, error) {
 	res := []models.Post{}
-	db, err := sql.Open("sqlite3", DB)
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +128,7 @@ func GetAllPosts() ([]models.Post, error) {
 
 func GetAllUsers() ([]models.User, error) {
 	res := []models.User{}
-	db, err := sql.Open("sqlite3", DB)
+	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return nil, err
 	}
