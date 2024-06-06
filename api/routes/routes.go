@@ -11,7 +11,9 @@ import (
 	"real-time-forum/api/routes/middleware"
 	"real-time-forum/api/utils"
 	"strconv"
+	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,13 +33,9 @@ func Root(writer http.ResponseWriter, request *http.Request) {
 		StatusCode: http.StatusOK,
 		Message:    "OK",
 	}
-	sess, err := database.GetSession(writer, request)
-	if err != nil {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Unauthorized"
-	} else {
-		resp.Data = sess.Values()
-	}
+
+	// TODO: GIVE USER'S SESSION INFOS
+
 	SendResponse(writer, resp)
 }
 
@@ -56,7 +54,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 
 	user := models.User{
 		Email:     request.FormValue("register-email"),
-		Username:  request.FormValue("register-username"),
+		Name:      request.FormValue("register-username"),
 		Password:  request.FormValue("register-password"),
 		Gender:    request.FormValue("register-gender"),
 		FirstName: request.FormValue("register-first-name"),
@@ -64,7 +62,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if user.Email == "" ||
-		user.Username == "" ||
+		user.Name == "" ||
 		user.Password == "" ||
 		user.Gender == "" ||
 		user.FirstName == "" ||
@@ -105,7 +103,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	user.Password = string(crypt)
-	err = database.AddClient(user)
+	err = database.AddUser(user)
 	if err != nil {
 		log.Println(err)
 		resp.StatusCode = http.StatusInternalServerError
@@ -115,8 +113,8 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	sess := database.CreateSession(writer, request)
-	sess.Set("b64", user.B64)
-	sess.Set("username", user.Username)
+	sess.SetID(user.B64)
+	sess.SetName(user.Name)
 	SendResponse(writer, resp)
 }
 
@@ -152,7 +150,7 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	comp, err := database.GetClientFromMail(user.Email)
+	comp, err := database.GetUserFromMail(user.Email)
 	if err != nil {
 		log.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
@@ -177,8 +175,8 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 
 	user = *comp
 	sess := database.CreateSession(writer, request)
-	sess.Set("b64", user.B64)
-	sess.Set("username", user.Username)
+	sess.SetID(user.B64)
+	sess.SetName(user.Name)
 	SendResponse(writer, resp)
 }
 
@@ -195,7 +193,7 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	session, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
+	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
 	if !ok {
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Message = "Internal Server Error"
@@ -203,13 +201,32 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	log.Println(session)
+	rawID, err := uuid.NewV4()
+	if err != nil {
+		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
+		SendResponse(writer, resp)
+	}
+
+	p := models.Post{
+		UUID:     rawID.String(),
+		UserID:   sess.GetID(),
+		Username: sess.GetName(),
+		Content:  request.FormValue("post-content"),
+		Date:     time.Now(),
+	}
+
+	err = database.CreatePost(p)
+	if err != nil {
+		resp.StatusCode = http.StatusInternalServerError
+		resp.Message = "Internal Server Error"
+		SendResponse(writer, resp)
+	}
 
 	SendResponse(writer, resp)
 }
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
-	// Check session
 	posts, err := database.GetAllPosts()
 	if err != nil {
 		log.Println(err)

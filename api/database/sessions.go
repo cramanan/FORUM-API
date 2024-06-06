@@ -10,26 +10,43 @@ import (
 )
 
 type Session struct {
-	mx     sync.RWMutex
-	cookie http.Cookie
-	values map[string]any
+	user_id   string
+	user_name string
+	expires   time.Time
 }
 
-func (sess *Session) Get(key string) (value any, ok bool) {
-	sess.mx.RLock()
-	defer sess.mx.RUnlock()
-	value, ok = sess.values[key]
-	return value, ok
+func (sess *Session) SetID(key string) {
+	sess.user_id = key
 }
 
-func (sess *Session) Set(key string, value any) {
-	sess.mx.Lock()
-	defer sess.mx.Unlock()
-	sess.values[key] = value
+func (sess *Session) GetID() string {
+	return sess.user_id
 }
 
-func (sess *Session) Values() map[string]any {
-	return sess.values
+func (sess *Session) SetName(key string) {
+	sess.user_name = key
+}
+
+func (sess *Session) GetName() string {
+	return sess.user_name
+}
+
+func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
+	s = new(Session)
+	sessid := utils.GenerateBase64ID(16)
+	cookie := http.Cookie{
+		Name:     cookie_name,
+		Value:    sessid,
+		Expires:  time.Now().Add(session_timeout),
+		Path:     "/",
+		HttpOnly: false,
+	}
+	http.SetCookie(w, &cookie)
+	private_store.mx.Lock()
+	s.expires = cookie.Expires
+	private_store.sessions[sessid] = s
+	private_store.mx.Unlock()
+	return s
 }
 
 func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) {
@@ -45,27 +62,8 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 	return s, nil
 }
 
-func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
-	s = new(Session)
-	s.values = make(map[string]any)
-	sessid := utils.GenerateBase64ID(16)
-	cookie := http.Cookie{
-		Name:     cookie_name,
-		Value:    sessid,
-		Expires:  time.Now().Add(session_timeout),
-		Path:     "/",
-		HttpOnly: false,
-	}
-	http.SetCookie(w, &cookie)
-	private_store.mx.Lock()
-	s.cookie = cookie
-	private_store.sessions[sessid] = s
-	private_store.mx.Unlock()
-	return s
-}
-
 func (sess *Session) End() {
-	sess.cookie.Expires = time.Now()
+	sess.expires = time.Now()
 }
 
 type session_store struct {
@@ -77,7 +75,7 @@ func (st *session_store) timeout_cycle() {
 	for {
 		time.Sleep(session_timeout)
 		for key, sess := range st.sessions {
-			if sess.cookie.Expires.Before(time.Now()) {
+			if sess.expires.Before(time.Now()) {
 				st.mx.Lock()
 				delete(st.sessions, key)
 				st.mx.Unlock()

@@ -5,9 +5,7 @@ import (
 	"io"
 	"os"
 	"real-time-forum/api/models"
-	"time"
 
-	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -37,14 +35,14 @@ func InitDB() (err error) {
 	return err
 }
 
-func AddClient(c models.User) (err error) {
+func AddUser(u models.User) (err error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 	r := "SELECT * FROM users WHERE email = ?;"
-	row := db.QueryRow(r, c.Email)
+	row := db.QueryRow(r, u.Email)
 	err = row.Scan()
 	if err != sql.ErrNoRows {
 		return err
@@ -52,19 +50,19 @@ func AddClient(c models.User) (err error) {
 
 	r = "INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?, ?);"
 	_, err = db.Exec(r,
-		c.B64,
-		c.Email,
-		c.Username,
-		c.Password,
-		c.Gender,
-		c.Age,
-		c.FirstName,
-		c.LastName,
+		u.B64,
+		u.Email,
+		u.Name,
+		u.Password,
+		u.Gender,
+		u.Age,
+		u.FirstName,
+		u.LastName,
 	)
 	return err
 }
 
-func GetClientFromMail(email string) (c *models.User, err error) {
+func GetUserFromMail(email string) (c *models.User, err error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
 		return nil, err
@@ -74,7 +72,7 @@ func GetClientFromMail(email string) (c *models.User, err error) {
 	r := "SELECT b64, email, username, password FROM users WHERE email = ?;"
 	row := db.QueryRow(r, email)
 	c = new(models.User)
-	err = row.Scan(&c.B64, &c.Email, &c.Username, &c.Password)
+	err = row.Scan(&c.B64, &c.Email, &c.Name, &c.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -91,12 +89,7 @@ func CreatePost(p models.Post) (err error) {
 
 	r := "INSERT INTO posts VALUES(?, ?, ?, ?);"
 
-	rawID, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(r, rawID.String(), p.UserID, p.Content, time.Now())
+	_, err = db.Exec(r, p.UUID, p.UserID, p.Content, p.Date)
 	return err
 }
 
@@ -123,30 +116,5 @@ func GetAllPosts() ([]models.Post, error) {
 		res = append(res, p)
 	}
 
-	return res, nil
-}
-
-func GetAllUsers() ([]models.User, error) {
-	res := []models.User{}
-	db, err := sql.Open("sqlite3", db_path)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	r := "SELECT username, b64 FROM users;"
-	rows, err := db.Query(r)
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		u := models.User{}
-		err = rows.Scan(&u.Username, &u.B64)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, u)
-	}
 	return res, nil
 }
