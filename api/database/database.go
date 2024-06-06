@@ -2,6 +2,8 @@ package database
 
 import (
 	"database/sql"
+	"io"
+	"os"
 	"real-time-forum/api/models"
 	"time"
 
@@ -11,30 +13,25 @@ import (
 const DB = "api/data/database.sqlite"
 
 func InitDB() (err error) {
+
+	f, err := os.Open("api/data/db.sql")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	query, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
 	db, err := sql.Open("sqlite3", DB)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	r := `CREATE TABLE IF NOT EXISTS users (
-b64 TEXT PRIMARY KEY,
-email TEXT NOT NULL UNIQUE,
-username TEXT,
-password TEXT,
-gender TEXT,
-age INTEGER DEFAULT 0,
-firstname TEXT,
-lastname TEXT
-);
-
-CREATE TABLE IF NOT EXISTS posts (
-	userid TEXT REFERENCES users(b64),
-	content TEXT,
-	date DATE
-);`
-
-	_, err = db.Exec(r)
+	_, err = db.Exec(string(query))
 	return err
 }
 

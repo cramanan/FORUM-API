@@ -37,6 +37,6 @@ func main() {
 	log.Println("Server up")
 	err = server.ListenAndServe()
 	if err != nil {
-		log.Println("Error")
+		log.Println("Error here")
 	}
 }
