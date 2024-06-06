@@ -175,8 +175,8 @@ class Home extends View {
     const postform = document.getElementById("post-form");
     postform?.addEventListener("submit", (event) => this.Post(event));
 
-    // const logout = document.getElementById("logout-button");
-    // logout?.addEventListener("click", (event) => this.Logout(event));
+    const logout = document.getElementById("logout-button");
+    logout?.addEventListener("click", (event) => this.Logout(event));
 
     const sidebar = document.getElementById("sidebar");
     const closeBtn = document.createElement("button");
@@ -220,7 +220,7 @@ class Home extends View {
     try {
       const response = await fetch(`http://${APIendpoint}/getposts`);
       const datas = await response.json();
-      datas.data.forEach((post) => {
+      datas.forEach((post) => {
         const div = document.createElement("div");
         div.className = "post";
         const h2 = document.createElement("h2");
@@ -241,6 +241,7 @@ class Home extends View {
       const response = await fetch(`http://${APIendpoint}/logout`, {
         credentials: "include",
       });
+      console.log(response);
       navigateTo("/connect");
     } catch (reason) {
       console.log(reason);

@@ -22,13 +22,12 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	mux.Handle("/api/", middleware.Protected(routes.Root))
-	mux.HandleFunc("/api/register", routes.RegisterClient)
-	mux.HandleFunc("/api/login", routes.LogClientIn)
+	mux.HandleFunc("/api/register", routes.RegisterUser)
+	mux.HandleFunc("/api/login", routes.LogUserIn)
 	mux.Handle("/api/getposts", middleware.Protected(routes.GetPosts))
 	mux.Handle("/api/post", middleware.Protected(routes.Post))
 	mux.Handle("/api/ws", middleware.Protected(routes.WS))
-
-	// mux.HandleFunc("/logout", routes.Logout)
+	mux.Handle("/api/logout", middleware.Protected(routes.Logout))
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: mux,

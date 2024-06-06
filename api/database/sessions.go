@@ -10,6 +10,7 @@ import (
 )
 
 type Session struct {
+	b64       string
 	user_id   string
 	user_name string
 	expires   time.Time
@@ -34,6 +35,7 @@ func (sess *Session) GetName() string {
 func CreateSession(w http.ResponseWriter, r *http.Request) (s *Session) {
 	s = new(Session)
 	sessid := utils.GenerateBase64ID(16)
+	s.b64 = sessid
 	cookie := http.Cookie{
 		Name:     cookie_name,
 		Value:    sessid,
@@ -63,7 +65,9 @@ func GetSession(w http.ResponseWriter, r *http.Request) (s *Session, err error) 
 }
 
 func (sess *Session) End() {
-	sess.expires = time.Now()
+	private_store.mx.Lock()
+	delete(private_store.sessions, sess.b64)
+	private_store.mx.Unlock()
 }
 
 type session_store struct {

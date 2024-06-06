@@ -2,6 +2,7 @@ package routes
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -28,13 +29,17 @@ var (
 )
 
 func Root(writer http.ResponseWriter, request *http.Request) {
+	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
+	if !ok {
+		writer.WriteHeader(http.StatusInternalServerError)
+	} else {
+		json.NewEncoder(writer).Encode(sess.GetName())
+	}
 }
 
-func RegisterClient(writer http.ResponseWriter, request *http.Request) {
-
+func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		writer.WriteHeader(http.StatusBadRequest)
-
 		return
 	}
 	var err error
@@ -93,7 +98,7 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	sess.SetName(user.Name)
 }
 
-func LogClientIn(writer http.ResponseWriter, request *http.Request) {
+func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		writer.WriteHeader(http.StatusBadRequest)
 		log.Println("WRONG REQUEST TYPE")
@@ -170,10 +175,22 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 }
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
-	writer.WriteHeader(http.StatusBadRequest)
+	posts, err := database.GetAllPosts()
+	if err != nil {
+		log.Println(err)
+	}
+
+	json.NewEncoder(writer).Encode(posts)
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) {
+	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
+	if !ok {
+		writer.WriteHeader(http.StatusInternalServerError)
+		log.Println("NO SESSION")
+		return
+	}
+	sess.End()
 }
 
 func WS(writer http.ResponseWriter, request *http.Request) {
