@@ -118,5 +118,5 @@ var private_store = new_store()
 
 const (
 	cookie_name     = "session-id"
-	session_timeout = time.Hour * 10
+	session_timeout = time.Hour * 1
 )

@@ -177,7 +177,7 @@ class Home extends View {
     sidebar.prepend(closeBtn);
 
     const users = document.getElementById("users");
-    await this.fetchUsers();
+    users.append(...(await this.fetchUsers()));
 
     const conn = new WebSocket(`ws://${APIendpoint}/ws`);
     conn.onmessage = (event) => console.log(event.data);
@@ -205,16 +205,24 @@ class Home extends View {
   }
 
   async fetchUsers() {
+    const usersHTML = [];
     try {
       const response = await fetch(`http://${APIendpoint}/getusers`);
       const datas = await response.json();
       datas.forEach((user) => {
-        console.log(user);
+        const button = document.createElement("button");
+        button.className = "side-user";
+        const h2 = document.createElement("h2");
+        h2.textContent = user.firstName;
+        const p = document.createElement("p");
+        p.textContent = `${user.name}#${user.b64}`;
+        button.append(h2, p);
+        usersHTML.push(button);
       });
     } catch (error) {
       console.log(error);
     }
-    return;
+    return usersHTML;
   }
 
   async fetchPosts() {

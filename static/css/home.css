@@ -35,7 +35,6 @@ textarea {
     height: 100%;
     width: 200px;
     transition: width 1s;
-    text-wrap: nowrap;
 }
 
 #sidebar.closed{
@@ -45,6 +44,7 @@ textarea {
 #sidebar h2{
     margin: auto;
     width: fit-content;
+    
 }
 
 #sidebar #closeBtn{
@@ -53,4 +53,7 @@ textarea {
     width: var(--size);
     height: var(--size);
     left: calc(var(--size) * -1);
+}
+
+#sidebar #users .side-user{
 }

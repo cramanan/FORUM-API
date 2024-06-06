@@ -93,7 +93,6 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 	sess := database.NewSession(writer, request)
 	sess.SetID(user.B64)
 	sess.SetName(user.Name)
-	log.Println(sess)
 }
 
 func LogUserIn(writer http.ResponseWriter, request *http.Request) {
