@@ -104,10 +104,6 @@ class Connect extends View {
       });
       if (response.ok) {
         navigateTo("/");
-      } else {
-        const server_msg = await response.json();
-        document.getElementById("login-server-error").textContent =
-          server_msg.message;
       }
     } catch (reason) {
       console.log(reason);
@@ -123,13 +119,7 @@ class Connect extends View {
         body: data,
         credentials: "include",
       });
-      if (response.ok) {
-        navigateTo("/");
-      } else {
-        const server_msg = await response.json();
-        document.getElementById("login-server-error").textContent =
-          server_msg.message;
-      }
+      if (response.ok) navigateTo("/");
     } catch (reason) {
       console.log(reason);
     }
@@ -166,8 +156,6 @@ class Home extends View {
     return html;
   }
 
-  async fetchUsers() {}
-
   async bindListeners() {
     const allposts = document.getElementById("all-posts");
     allposts?.append(...(await this.fetchPosts()));
@@ -189,25 +177,10 @@ class Home extends View {
     sidebar.prepend(closeBtn);
 
     const users = document.getElementById("users");
+    await this.fetchUsers();
 
     const conn = new WebSocket(`ws://${APIendpoint}/ws`);
-    conn.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      switch (msg.type) {
-        case "ping":
-          const divs = [];
-          msg.data.forEach((u) => {
-            const div = document.createElement("div");
-            div.textContent = `${u.name}#${u.b64}`;
-            divs.push(div);
-          });
-          users.append(...divs);
-          break;
-
-        default:
-          break;
-      }
-    };
+    conn.onmessage = (event) => console.log(event.data);
   }
 
   async Post(event) {
@@ -229,6 +202,19 @@ class Home extends View {
     } catch (reason) {
       console.log(reason);
     }
+  }
+
+  async fetchUsers() {
+    try {
+      const response = await fetch(`http://${APIendpoint}/getusers`);
+      const datas = await response.json();
+      datas.forEach((user) => {
+        console.log(user);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    return;
   }
 
   async fetchPosts() {

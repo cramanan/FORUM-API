@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"io"
+	"log"
+	"net/mail"
 	"os"
 	"real-time-forum/api/models"
 
@@ -62,21 +64,21 @@ func AddUser(u models.User) (err error) {
 	return err
 }
 
-func GetPasswordFromMail(email string) (password []byte, err error) {
+func GetPasswordAndIDFromMail(email mail.Address) (password []byte, b64 string, err error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer db.Close()
 
-	r := "SELECT password FROM users WHERE email = ?;"
-	row := db.QueryRow(r, email)
-	err = row.Scan(&password)
+	r := "SELECT password, b64 FROM users WHERE email = ?;"
+	row := db.QueryRow(r, email.Address)
+	err = row.Scan(&password, &b64)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return password, err
+	return password, b64, err
 }
 
 func CreatePost(p models.Post) (err error) {
@@ -93,6 +95,7 @@ func CreatePost(p models.Post) (err error) {
 }
 
 func GetAllPosts() ([]models.Post, error) {
+	log.Println("Called")
 	res := []models.Post{}
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
@@ -107,6 +110,7 @@ func GetAllPosts() ([]models.Post, error) {
 	}
 
 	for rows.Next() {
+		log.Println("Range")
 		p := models.Post{}
 		err = rows.Scan(&p.UserID, &p.Username, &p.Content, &p.Date)
 		if err != nil {
@@ -126,7 +130,7 @@ func GetAllUsers() ([]models.User, error) {
 	}
 	defer db.Close()
 
-	r := "SELECT b64, name FROM users;"
+	r := "SELECT b64, email, name, gender, age, first_name, last_name  FROM users;"
 	rows, err := db.Query(r)
 	if err != nil {
 		return nil, err
@@ -134,7 +138,14 @@ func GetAllUsers() ([]models.User, error) {
 
 	for rows.Next() {
 		u := models.User{}
-		err = rows.Scan(&u.B64, &u.Name)
+		err = rows.Scan(&u.B64,
+			&u.Email,
+			&u.Name,
+			&u.Gender,
+			&u.Age,
+			&u.FirstName,
+			&u.LastName,
+		)
 		if err != nil {
 			return nil, err
 		}

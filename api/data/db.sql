@@ -23,4 +23,3 @@ CREATE TABLE IF NOT EXISTS messages (
 	content TEXT,
 	time_stamp DATE
 )
-

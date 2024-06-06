@@ -50,7 +50,6 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	password := request.FormValue("register-password")
-
 	if user.Email == "" ||
 		user.Name == "" ||
 		password == "" ||
@@ -103,9 +102,8 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user := models.User{
-		Email: request.FormValue("login-email"),
-	}
+	name := request.FormValue("login-name")
+	email := request.FormValue("login-email")
 
 	password := request.FormValue("login-password")
 	if password == "" {
@@ -113,14 +111,14 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	_, err := mail.ParseAddress(user.Email)
+	parsedMail, err := mail.ParseAddress(email)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		log.Println("INVALID EMAIL")
 		return
 	}
 
-	comp, err := database.GetPasswordFromMail(user.Email)
+	comp, b64, err := database.GetPasswordAndIDFromMail(*parsedMail)
 	if err != nil {
 		log.Println(err)
 		writer.WriteHeader(http.StatusBadRequest)
@@ -135,12 +133,11 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	sess := database.CreateSession(writer, request)
-	sess.SetID(user.B64)
-	sess.SetName(user.Name)
+	sess.SetID(b64)
+	sess.SetName(name)
 }
 
 func Post(writer http.ResponseWriter, request *http.Request) {
-
 	if request.Method != http.MethodPost {
 		writer.WriteHeader(http.StatusBadRequest)
 		log.Println("WRONG REQUEST TYPE")
@@ -170,12 +167,23 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 }
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Add("Content-Type", "application/json")
 	posts, err := database.GetAllPosts()
 	if err != nil {
 		log.Println(err)
 	}
 
 	json.NewEncoder(writer).Encode(posts)
+}
+
+func GetUsers(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Add("Content-Type", "application/json")
+	users, err := database.GetAllUsers()
+	if err != nil {
+		log.Println(err)
+	}
+
+	json.NewEncoder(writer).Encode(users)
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) {
@@ -194,22 +202,15 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 		Data interface{} `json:"data"`
 	}
 
-	users, err := database.GetAllUsers()
-	if err != nil {
-		log.Println("Couldn't retrieve users :/", err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		log.Println("Error")
+		log.Println("Error Upgrading protocol")
 		return
 	}
 
 	conn.WriteJSON(WSMessage{
 		Type: "ping",
-		Data: users,
+		Data: "Hello",
 	})
 	go func() {
 		for {
