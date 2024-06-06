@@ -199,16 +199,24 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 		Data interface{} `json:"data"`
 	}
 
+	users, err := database.GetAllUsers()
+	if err != nil {
+		log.Println("Couldn't retrieve users :/", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Println("Error")
 		return
 	}
 
+	conn.WriteJSON(WSMessage{
+		Type: "ping",
+		Data: users,
+	})
 	go func() {
-		conn.WriteJSON(WSMessage{
-			Type: "ping",
-		})
 		for {
 
 		}

@@ -118,3 +118,29 @@ func GetAllPosts() ([]models.Post, error) {
 
 	return res, nil
 }
+
+func GetAllUsers() ([]models.ProtectedUser, error) {
+	res := []models.ProtectedUser{}
+	db, err := sql.Open("sqlite3", db_path)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	r := "SELECT b64, name FROM users;"
+	rows, err := db.Query(r)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		u := models.ProtectedUser{}
+		err = rows.Scan(&u.B64, &u.Name)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, u)
+	}
+
+	return res, nil
+}

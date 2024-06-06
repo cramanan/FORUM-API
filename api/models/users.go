@@ -10,3 +10,8 @@ type User struct {
 	FirstName string
 	LastName  string
 }
+
+type ProtectedUser struct {
+	B64  string `json:"b64"`
+	Name string `json:"name"`
+}

@@ -188,10 +188,26 @@ class Home extends View {
     };
     sidebar.prepend(closeBtn);
 
-    const conn = new WebSocket(`ws://${APIendpoint}/ws`);
-    conn.onmessage = (msg) => console.log(JSON.parse(msg.data));
     const users = document.getElementById("users");
-    console.log(users);
+
+    const conn = new WebSocket(`ws://${APIendpoint}/ws`);
+    conn.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case "ping":
+          const divs = [];
+          msg.data.forEach((u) => {
+            const div = document.createElement("div");
+            div.textContent = `${u.name}#${u.b64}`;
+            divs.push(div);
+          });
+          users.append(...divs);
+          break;
+
+        default:
+          break;
+      }
+    };
   }
 
   async Post(event) {
