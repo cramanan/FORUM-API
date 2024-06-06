@@ -62,10 +62,10 @@ func AddUser(u models.User) (err error) {
 	return err
 }
 
-func GetPasswordFromMail(email string) (password string, err error) {
+func GetPasswordFromMail(email string) (password []byte, err error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer db.Close()
 
@@ -73,7 +73,7 @@ func GetPasswordFromMail(email string) (password string, err error) {
 	row := db.QueryRow(r, email)
 	err = row.Scan(&password)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return password, err

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
 	b64 TEXT PRIMARY KEY,
 	email TEXT NOT NULL UNIQUE,
 	name 	TEXT,
-	password 	TEXT,
+	password 	BLOB,
 	gender 		TEXT,
 	age 		INTEGER DEFAULT 0,
 	first_name 	TEXT,

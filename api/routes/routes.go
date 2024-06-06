@@ -40,7 +40,6 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var err error
 
 	user := models.User{
 		Email:     request.FormValue("register-email"),
@@ -63,7 +62,7 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	_, err = mail.ParseAddress(user.Email)
+	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		log.Println("INVALID EMAIL")
@@ -85,7 +84,7 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user.SetPassword(string(crypt))
+	user.SetPassword(crypt)
 	err = database.AddUser(user)
 	if err != nil {
 		log.Println(err)
@@ -109,7 +108,6 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	password := request.FormValue("login-password")
-
 	if password == "" {
 		log.Println("No Password")
 		return
@@ -129,7 +127,7 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(comp), []byte(password))
+	err = bcrypt.CompareHashAndPassword(comp, []byte(password))
 	if err != nil {
 		log.Println("INVALID PASSWORD")
 		writer.WriteHeader(http.StatusInternalServerError)
