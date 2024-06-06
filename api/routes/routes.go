@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -29,25 +28,13 @@ var (
 )
 
 func Root(writer http.ResponseWriter, request *http.Request) {
-	resp := &Response{
-		StatusCode: http.StatusOK,
-		Message:    "OK",
-	}
-
-	// TODO: GIVE USER'S SESSION INFOS
-
-	SendResponse(writer, resp)
 }
 
 func RegisterClient(writer http.ResponseWriter, request *http.Request) {
-	resp := &Response{
-		StatusCode: http.StatusOK,
-		Message:    "OK",
-	}
+
 	if request.Method != http.MethodPost {
-		resp.StatusCode = http.StatusBadRequest
-		resp.Message = "Bad Request"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
 	var err error
@@ -67,27 +54,22 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 		user.Gender == "" ||
 		user.FirstName == "" ||
 		user.LastName == "" {
-
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Empty Credentials"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
+		log.Println("NO CREDENTIALS")
 		return
 	}
 
 	_, err = mail.ParseAddress(user.Email)
 	if err != nil {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Invalid Email format"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
+		log.Println("INVALID EMAIL")
 		return
 	}
 
 	user.Age, err = strconv.Atoi(request.FormValue("register-age"))
 	if err != nil {
 		log.Println(err)
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Invalid Age format"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -96,9 +78,6 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	crypt, err := bcrypt.GenerateFromPassword([]byte(user.Password), 11)
 	if err != nil {
 		log.Println(err)
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Something Went Wrong :/ Try again later."
-		SendResponse(writer, resp)
 		return
 	}
 
@@ -106,27 +85,18 @@ func RegisterClient(writer http.ResponseWriter, request *http.Request) {
 	err = database.AddUser(user)
 	if err != nil {
 		log.Println(err)
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-		SendResponse(writer, resp)
 		return
 	}
 
 	sess := database.CreateSession(writer, request)
 	sess.SetID(user.B64)
 	sess.SetName(user.Name)
-	SendResponse(writer, resp)
 }
 
 func LogClientIn(writer http.ResponseWriter, request *http.Request) {
-	resp := &Response{
-		StatusCode: http.StatusOK,
-		Message:    "OK",
-	}
 	if request.Method != http.MethodPost {
-		resp.StatusCode = http.StatusBadRequest
-		resp.Message = "Bad Request"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
+		log.Println("WRONG REQUEST TYPE")
 		return
 	}
 
@@ -136,17 +106,13 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if user.Password == "" {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Empty credentials"
-		SendResponse(writer, resp)
+		log.Println("No Password")
 		return
 	}
 
 	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
-		resp.StatusCode = http.StatusUnauthorized
-		resp.Message = "Invalid mail format"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -154,22 +120,16 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		log.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
-			resp.StatusCode = http.StatusUnauthorized
-			resp.Message = "Invalid password or email"
-			SendResponse(writer, resp)
+			writer.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(comp.Password), []byte(user.Password))
 	if err != nil {
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Invalid password or email"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -177,68 +137,40 @@ func LogClientIn(writer http.ResponseWriter, request *http.Request) {
 	sess := database.CreateSession(writer, request)
 	sess.SetID(user.B64)
 	sess.SetName(user.Name)
-	SendResponse(writer, resp)
 }
 
 func Post(writer http.ResponseWriter, request *http.Request) {
-	resp := &Response{
-		StatusCode: http.StatusOK,
-		Message:    "OK",
-	}
 
 	if request.Method != http.MethodPost {
-		resp.StatusCode = http.StatusBadRequest
-		resp.Message = "Bad Request"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusBadRequest)
+		log.Println("WRONG REQUEST TYPE")
 		return
 	}
 
 	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
 	if !ok {
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-		SendResponse(writer, resp)
+		writer.WriteHeader(http.StatusInternalServerError)
+		log.Println("NO SESSION")
 		return
 	}
 
-	rawID, err := uuid.NewV4()
-	if err != nil {
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-		SendResponse(writer, resp)
-	}
-
 	p := models.Post{
-		UUID:     rawID.String(),
 		UserID:   sess.GetID(),
 		Username: sess.GetName(),
 		Content:  request.FormValue("post-content"),
 		Date:     time.Now(),
 	}
 
-	err = database.CreatePost(p)
+	err := database.CreatePost(p)
 	if err != nil {
-		resp.StatusCode = http.StatusInternalServerError
-		resp.Message = "Internal Server Error"
-		SendResponse(writer, resp)
-	}
-
-	SendResponse(writer, resp)
-}
-
-func GetPosts(writer http.ResponseWriter, request *http.Request) {
-	posts, err := database.GetAllPosts()
-	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+}
 
-	resp := &Response{
-		StatusCode: http.StatusOK,
-		Message:    "OK",
-		Data:       posts,
-	}
-	SendResponse(writer, resp)
+func GetPosts(writer http.ResponseWriter, request *http.Request) {
+	writer.WriteHeader(http.StatusBadRequest)
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) {
@@ -253,7 +185,6 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Println("Error")
-		SendResponse(writer, nil)
 		return
 	}
 

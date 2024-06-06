@@ -1,18 +1,26 @@
 CREATE TABLE IF NOT EXISTS users (
 	b64 TEXT PRIMARY KEY,
 	email TEXT NOT NULL UNIQUE,
-	username 	TEXT,
+	name 	TEXT,
 	password 	TEXT,
 	gender 		TEXT,
 	age 		INTEGER DEFAULT 0,
-	firstname 	TEXT,
-	lastname 	TEXT
+	first_name 	TEXT,
+	last_name 	TEXT
 );
 
 CREATE TABLE IF NOT EXISTS posts (
-	uuid 		TEXT PRIMARY KEY,
-	userid 		TEXT REFERENCES users(b64),
+	id 		INTEGER PRIMARY KEY AUTOINCREMENT,
+	user_id 		TEXT REFERENCES users(b64),
 	content 	TEXT,
 	date DATE
 );
+
+CREATE TABLE IF NOT EXISTS messages (
+	message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	sender_id TEXT REFERENCES users(b64),
+	receiver_id TEXT REFERENCES users(b64),
+	content TEXT,
+	time_stamp DATE
+)
 

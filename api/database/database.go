@@ -69,7 +69,7 @@ func GetUserFromMail(email string) (c *models.User, err error) {
 	}
 	defer db.Close()
 
-	r := "SELECT b64, email, username, password FROM users WHERE email = ?;"
+	r := "SELECT b64, email, name, password FROM users WHERE email = ?;"
 	row := db.QueryRow(r, email)
 	c = new(models.User)
 	err = row.Scan(&c.B64, &c.Email, &c.Name, &c.Password)
@@ -87,9 +87,9 @@ func CreatePost(p models.Post) (err error) {
 	}
 	defer db.Close()
 
-	r := "INSERT INTO posts VALUES(?, ?, ?, ?);"
+	r := "INSERT INTO posts VALUES(NULL ,?, ?, ?);"
 
-	_, err = db.Exec(r, p.UUID, p.UserID, p.Content, p.Date)
+	_, err = db.Exec(r, p.UserID, p.Content, p.Date)
 	return err
 }
 
@@ -101,7 +101,7 @@ func GetAllPosts() ([]models.Post, error) {
 	}
 	defer db.Close()
 
-	r := "SELECT userid, users.username, content, date FROM posts JOIN users ON users.b64 = posts.userid;"
+	r := "SELECT user_id, users.name, content, date FROM posts JOIN users ON users.b64 = posts.user_id;"
 	rows, err := db.Query(r)
 	if err != nil {
 		return nil, err

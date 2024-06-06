@@ -198,7 +198,6 @@ class Home extends View {
     event.preventDefault();
     try {
       const data = new FormData(event.target);
-      console.log(data);
       const response = await fetch(`http://${APIendpoint}/post`, {
         method: "post",
         body: data,
