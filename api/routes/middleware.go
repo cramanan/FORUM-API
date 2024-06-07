@@ -1,4 +1,4 @@
-package middleware
+package routes
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 type context_key string
 
-const ContextSessionKey context_key = "session"
+const contextSessionKey context_key = "session"
 
 func Protected(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +18,7 @@ func Protected(next http.HandlerFunc) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ContextSessionKey, session)
+		ctx := context.WithValue(r.Context(), contextSessionKey, session)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

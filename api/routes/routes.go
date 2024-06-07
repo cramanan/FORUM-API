@@ -7,7 +7,6 @@ import (
 	"net/mail"
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
-	"real-time-forum/api/routes/middleware"
 	"real-time-forum/api/utils"
 	"strconv"
 	"time"
@@ -15,6 +14,22 @@ import (
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type HandlerFunc func(http.ResponseWriter, *http.Request) error
+
+func HandleFunc(fn HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := fn(w, r); err != nil {
+			writeJSON(w, http.StatusInternalServerError, nil)
+		}
+	}
+}
+
+func writeJSON(writer http.ResponseWriter, status int, v any) error {
+	writer.Header().Add("Content-Type", "application/json")
+	writer.WriteHeader(status)
+	return json.NewEncoder(writer).Encode(v)
+}
 
 var (
 	upgrader = websocket.Upgrader{
@@ -26,20 +41,18 @@ var (
 	}
 )
 
-func Root(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Add("Content-Type", "application/json")
-	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
+func Root(writer http.ResponseWriter, request *http.Request) error {
+	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
 	if !ok {
-		writer.WriteHeader(http.StatusServiceUnavailable)
-	} else {
-		json.NewEncoder(writer).Encode(sess.GetName())
+		log.Println("NO SESSION")
+		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
+	return writeJSON(writer, http.StatusOK, sess)
 }
 
-func Register(writer http.ResponseWriter, request *http.Request) {
+func Register(writer http.ResponseWriter, request *http.Request) error {
 	if request.Method != http.MethodPost {
-		writer.WriteHeader(http.StatusMethodNotAllowed)
-		return
+		return writeJSON(writer, http.StatusMethodNotAllowed, nil)
 	}
 
 	user := models.User{
@@ -57,95 +70,78 @@ func Register(writer http.ResponseWriter, request *http.Request) {
 		user.Gender == "" ||
 		user.FirstName == "" ||
 		user.LastName == "" {
-		writer.WriteHeader(http.StatusBadRequest)
-		log.Println("NO CREDENTIALS")
-		return
+		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
 	_, err := mail.ParseAddress(user.Email)
 	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		log.Println("INVALID EMAIL")
-		return
+		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
 	user.Age, err = strconv.Atoi(request.FormValue("register-age"))
 	if err != nil {
-		log.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
 	user.B64 = utils.GenerateBase64ID(5)
 	crypt, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	if err != nil {
-		log.Println(err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
+		return writeJSON(writer, http.StatusInternalServerError, nil)
 	}
 	user.SetPassword(crypt)
 
 	err = database.AddUser(user)
 	if err != nil {
-		log.Println(err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
+		return writeJSON(writer, http.StatusInternalServerError, nil)
 	}
 
 	sess := database.NewSession(writer, request)
 	sess.SetID(user.B64)
 	sess.SetName(user.Name)
+	return writeJSON(writer, http.StatusOK, nil)
 }
 
-func Login(writer http.ResponseWriter, request *http.Request) {
+func Login(writer http.ResponseWriter, request *http.Request) error {
 	if request.Method != http.MethodPost {
-		writer.WriteHeader(http.StatusBadRequest)
-		log.Println("WRONG REQUEST TYPE")
-		return
+		return writeJSON(writer, http.StatusMethodNotAllowed, nil)
 	}
 
 	email := request.FormValue("login-email")
-
 	password := []byte(request.FormValue("login-password"))
-
 	parsedMail, err := mail.ParseAddress(email)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		log.Println("INVALID EMAIL")
-		return
+		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
-	b64, username, comp, err := database.GetInfoFromMail(parsedMail) // TODO: retrieve username
+	b64, username, comp, err := database.GetInfoFromMail(parsedMail)
 	if err != nil {
 		log.Println(err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
 	err = bcrypt.CompareHashAndPassword(comp, password)
 	if err != nil {
 		log.Println("INVALID PASSWORD")
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
+		return writeJSON(writer, http.StatusInternalServerError, nil)
 	}
 
 	sess := database.NewSession(writer, request)
 	sess.SetID(b64)
 	sess.SetName(username)
+	return writeJSON(writer, http.StatusOK, nil)
 }
 
-func Post(writer http.ResponseWriter, request *http.Request) {
+func Post(writer http.ResponseWriter, request *http.Request) error {
 	if request.Method != http.MethodPost {
-		writer.WriteHeader(http.StatusBadRequest)
-		log.Println("WRONG REQUEST TYPE")
-		return
+		return writeJSON(writer, http.StatusMethodNotAllowed, nil)
 	}
 
-	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
+	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
 	if !ok {
-		writer.WriteHeader(http.StatusInternalServerError)
 		log.Println("NO SESSION")
-		return
+		return writeJSON(writer, http.StatusInternalServerError, nil)
 	}
 
 	p := models.Post{
@@ -157,43 +153,33 @@ func Post(writer http.ResponseWriter, request *http.Request) {
 
 	err := database.CreatePost(p)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
-		return
+		return writeJSON(writer, http.StatusInternalServerError, nil)
 	}
+	return writeJSON(writer, http.StatusOK, nil)
 }
 
-func GetPosts(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Add("Content-Type", "application/json")
-	posts, err := database.GetAllPosts()
-	if err != nil {
-		log.Println(err)
-	}
-
-	json.NewEncoder(writer).Encode(posts)
+func GetPosts(writer http.ResponseWriter, request *http.Request) error {
+	return writeJSON(writer, http.StatusOK, nil)
 }
 
-func GetUsers(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Add("Content-Type", "application/json")
-	users, err := database.GetAllUsers()
-	if err != nil {
-		log.Println(err)
-	}
-
-	json.NewEncoder(writer).Encode(users)
+func GetUsers(writer http.ResponseWriter, request *http.Request) error {
+	return writeJSON(writer, http.StatusOK, nil)
 }
 
-func Logout(writer http.ResponseWriter, request *http.Request) {
-	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
+func Logout(writer http.ResponseWriter, request *http.Request) error {
+	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
 	if !ok {
 		writer.WriteHeader(http.StatusInternalServerError)
 		log.Println("NO SESSION")
-		return
+		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
 	sess.End()
+	return writeJSON(writer, http.StatusOK, nil)
+
 }
 
-func WS(writer http.ResponseWriter, request *http.Request) {
+func WS(writer http.ResponseWriter, request *http.Request) error {
 	type WSMessage struct {
 		Type string      `json:"type"`
 		Data interface{} `json:"data"`
@@ -202,7 +188,8 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Println("Error Upgrading protocol")
-		return
+		return writeJSON(writer, http.StatusServiceUnavailable, nil)
+
 	}
 
 	conn.WriteJSON(WSMessage{
@@ -214,4 +201,5 @@ func WS(writer http.ResponseWriter, request *http.Request) {
 
 		}
 	}()
+	return writeJSON(writer, http.StatusOK, nil)
 }

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"real-time-forum/api/database"
 	"real-time-forum/api/routes"
-	"real-time-forum/api/routes/middleware"
 )
 
 func main() {
@@ -21,14 +20,14 @@ func main() {
 	})
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	mux.Handle("/api/", middleware.Protected(routes.Root))
-	mux.HandleFunc("/api/register", routes.Register)
-	mux.HandleFunc("/api/login", routes.Login)
-	mux.Handle("/api/logout", middleware.Protected(routes.Logout))
-	mux.Handle("/api/getposts", middleware.Protected(routes.GetPosts))
-	mux.Handle("/api/getusers", middleware.Protected(routes.GetUsers))
-	mux.Handle("/api/post", middleware.Protected(routes.Post))
-	mux.Handle("/api/ws", middleware.Protected(routes.WS))
+	mux.Handle("/api/", routes.Protected(routes.HandleFunc(routes.Root)))
+	mux.HandleFunc("/api/register", routes.HandleFunc(routes.Register))
+	mux.HandleFunc("/api/login", routes.HandleFunc(routes.Login))
+	mux.Handle("/api/logout", routes.Protected(routes.HandleFunc(routes.Logout)))
+	mux.Handle("/api/getposts", routes.Protected(routes.HandleFunc(routes.GetPosts)))
+	mux.Handle("/api/getusers", routes.Protected(routes.HandleFunc(routes.GetUsers)))
+	mux.Handle("/api/post", routes.Protected(routes.HandleFunc(routes.Post)))
+	// mux.Handle("/api/ws", middleware.Protected(routes.HandleFunc(routes.WS)))
 
 	server := http.Server{
 		Addr:    ":8080",
