@@ -22,8 +22,8 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	mux.Handle("/api/", middleware.Protected(routes.Root))
-	mux.HandleFunc("/api/register", routes.RegisterUser)
-	mux.HandleFunc("/api/login", routes.LogUserIn)
+	mux.HandleFunc("/api/register", routes.Register)
+	mux.HandleFunc("/api/login", routes.Login)
 	mux.Handle("/api/logout", middleware.Protected(routes.Logout))
 	mux.Handle("/api/getposts", middleware.Protected(routes.GetPosts))
 	mux.Handle("/api/getusers", middleware.Protected(routes.GetUsers))

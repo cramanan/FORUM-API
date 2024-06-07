@@ -27,17 +27,18 @@ var (
 )
 
 func Root(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Add("Content-Type", "application/json")
 	sess, ok := request.Context().Value(middleware.ContextSessionKey).(*database.Session)
 	if !ok {
-		writer.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusServiceUnavailable)
 	} else {
 		json.NewEncoder(writer).Encode(sess.GetName())
 	}
 }
 
-func RegisterUser(writer http.ResponseWriter, request *http.Request) {
+func Register(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
-		writer.WriteHeader(http.StatusBadRequest)
+		writer.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -76,17 +77,17 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	user.B64 = utils.GenerateBase64ID(5)
-
-	crypt, err := bcrypt.GenerateFromPassword([]byte(password), 11)
+	err = user.SetPassword([]byte(password))
 	if err != nil {
 		log.Println(err)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	user.SetPassword(crypt)
 	err = database.AddUser(user)
 	if err != nil {
 		log.Println(err)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -95,21 +96,16 @@ func RegisterUser(writer http.ResponseWriter, request *http.Request) {
 	sess.SetName(user.Name)
 }
 
-func LogUserIn(writer http.ResponseWriter, request *http.Request) {
+func Login(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		writer.WriteHeader(http.StatusBadRequest)
 		log.Println("WRONG REQUEST TYPE")
 		return
 	}
 
-	name := request.FormValue("login-name")
 	email := request.FormValue("login-email")
 
-	password := request.FormValue("login-password")
-	if password == "" {
-		log.Println("No Password")
-		return
-	}
+	password := []byte(request.FormValue("login-password"))
 
 	parsedMail, err := mail.ParseAddress(email)
 	if err != nil {
@@ -118,14 +114,14 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	comp, b64, err := database.GetPasswordAndIDFromMail(*parsedMail)
+	b64, username, comp, err := database.GetInfoFromMail(parsedMail) // TODO: retrieve username
 	if err != nil {
 		log.Println(err)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword(comp, []byte(password))
+	err = bcrypt.CompareHashAndPassword(comp, password)
 	if err != nil {
 		log.Println("INVALID PASSWORD")
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -134,7 +130,7 @@ func LogUserIn(writer http.ResponseWriter, request *http.Request) {
 
 	sess := database.NewSession(writer, request)
 	sess.SetID(b64)
-	sess.SetName(name)
+	sess.SetName(username)
 }
 
 func Post(writer http.ResponseWriter, request *http.Request) {

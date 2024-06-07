@@ -64,21 +64,21 @@ func AddUser(u models.User) (err error) {
 	return err
 }
 
-func GetPasswordAndIDFromMail(email mail.Address) (password []byte, b64 string, err error) {
+func GetInfoFromMail(email *mail.Address) (b64 string, username string, password []byte, err error) {
 	db, err := sql.Open("sqlite3", db_path)
 	if err != nil {
-		return nil, "", err
+		return
 	}
 	defer db.Close()
 
-	r := "SELECT password, b64 FROM users WHERE email = ?;"
+	r := "SELECT b64, name, password FROM users WHERE email = ?;"
 	row := db.QueryRow(r, email.Address)
-	err = row.Scan(&password, &b64)
+	err = row.Scan(&b64, &username, &password)
 	if err != nil {
-		return nil, "", err
+		return "", "", nil, err
 	}
 
-	return password, b64, err
+	return
 }
 
 func CreatePost(p models.Post) (err error) {

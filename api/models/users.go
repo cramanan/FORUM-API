@@ -1,5 +1,9 @@
 package models
 
+import (
+	"golang.org/x/crypto/bcrypt"
+)
+
 type User struct {
 	B64       string `json:"b64"`
 	Email     string `json:"email"`
@@ -15,6 +19,10 @@ func (u *User) GetPassword() []byte {
 	return u.password
 }
 
-func (u *User) SetPassword(password []byte) {
-	u.password = password
+func (u *User) SetPassword(password []byte) (err error) {
+	u.password, err = bcrypt.GenerateFromPassword([]byte(password), 11)
+	if err != nil {
+		return err
+	}
+	return nil
 }
