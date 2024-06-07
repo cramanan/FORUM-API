@@ -1,6 +1,5 @@
 body {
     background-color: burlywood;
-    overflow-x: hidden;
 }
 
 .header {
@@ -26,34 +25,4 @@ body {
 
 textarea {
     resize: none;
-}
-
-#sidebar{
-    background-color: #444444;
-    position: absolute;
-    right: 0;
-    height: 100%;
-    width: 200px;
-    transition: width 1s;
-}
-
-#sidebar.closed{
-    width: 0;
-}
-
-#sidebar h2{
-    margin: auto;
-    width: fit-content;
-    
-}
-
-#sidebar #closeBtn{
-    --size: 40px;
-    position: absolute;
-    width: var(--size);
-    height: var(--size);
-    left: calc(var(--size) * -1);
-}
-
-#sidebar #users .side-user{
 }

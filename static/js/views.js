@@ -139,10 +139,6 @@ class Home extends View {
         <h3><a href="/" id="main-title" data-link>REAL-TIME FORUM</a></h3>
         <button id="logout-button" title="Log Out"><img src="/static/images/logout.svg" width="34"/></button>
     </header>
-    <aside id="sidebar" class="closed">
-      <h2>Users :</h2>
-      <ul id="users"></ul>
-    </aside>
     <main>
       <form id="post-form">
           <label for="post-content">Create a P0ST</label>
@@ -166,21 +162,8 @@ class Home extends View {
     const logout = document.getElementById("logout-button");
     logout?.addEventListener("click", (event) => this.Logout(event));
 
-    const sidebar = document.getElementById("sidebar");
-    const closeBtn = document.createElement("button");
-    closeBtn.id = "closeBtn";
-    closeBtn.textContent = "<";
-    closeBtn.onclick = () => {
-      sidebar.classList.toggle("closed");
-      closeBtn.textContent = closeBtn.textContent === "<" ? ">" : "<";
-    };
-    sidebar.prepend(closeBtn);
-
-    const users = document.getElementById("users");
-    users.append(...(await this.fetchUsers()));
-
-    const conn = new WebSocket(`ws://${APIendpoint}/ws`);
-    conn.onmessage = (event) => console.log(event.data);
+    // const conn = new WebSocket(`ws://${APIendpoint}/ws`);
+    // conn.onmessage = (event) => console.log(event.data);
   }
 
   async Post(event) {
@@ -202,27 +185,6 @@ class Home extends View {
     } catch (reason) {
       console.log(reason);
     }
-  }
-
-  async fetchUsers() {
-    const usersHTML = [];
-    try {
-      const response = await fetch(`http://${APIendpoint}/getusers`);
-      const datas = await response.json();
-      datas.forEach((user) => {
-        const button = document.createElement("button");
-        button.className = "side-user";
-        const h2 = document.createElement("h2");
-        h2.textContent = user.firstName;
-        const p = document.createElement("p");
-        p.textContent = `${user.name}#${user.b64}`;
-        button.append(h2, p);
-        usersHTML.push(button);
-      });
-    } catch (error) {
-      console.log(error);
-    }
-    return usersHTML;
   }
 
   async fetchPosts() {
@@ -270,6 +232,22 @@ class _404 extends View {
   }
 }
 
-class Profile extends View {}
+class Profile extends View {
+  constructor() {
+    super();
+  }
+
+  async getHtml() {
+    const info = await fetch(`http://${APIendpoint}/`).then((resp) =>
+      resp.json()
+    );
+    return `
+      <h1>Profile</h1>
+      <div>${Object.entries(info)
+        .map(([k, v]) => `<div>${k} : ${v}</div>`)
+        .join("")}</div>
+    `;
+  }
+}
 
 export { View, Home, Connect, _404, Profile };

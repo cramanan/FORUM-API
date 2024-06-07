@@ -18,6 +18,7 @@ const router = async () => {
   const routes = [
     { path: "/", view: Home, Authorized },
     { path: "/connect", view: Connect, Authorized: async () => true },
+    { path: "/profile", view: Profile, Authorized },
   ];
 
   const potentialMatches = routes.map((route) => ({
