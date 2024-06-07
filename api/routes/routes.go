@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -31,23 +30,20 @@ func writeJSON(writer http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(writer).Encode(v)
 }
 
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
+func contextSession(request *http.Request) *database.Session {
+	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
+	if ok {
+		return sess
 	}
-)
+	return nil
+}
 
 func Root(writer http.ResponseWriter, request *http.Request) error {
-	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
-	if !ok {
-		log.Println("NO SESSION")
+	sess := contextSession(request)
+	if sess == nil {
 		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
-	return writeJSON(writer, http.StatusOK, sess)
+	return writeJSON(writer, http.StatusOK, nil)
 }
 
 func Register(writer http.ResponseWriter, request *http.Request) error {
@@ -110,8 +106,6 @@ func Login(writer http.ResponseWriter, request *http.Request) error {
 	password := []byte(request.FormValue("login-password"))
 	parsedMail, err := mail.ParseAddress(email)
 	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		log.Println("INVALID EMAIL")
 		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
@@ -138,10 +132,10 @@ func Post(writer http.ResponseWriter, request *http.Request) error {
 		return writeJSON(writer, http.StatusMethodNotAllowed, nil)
 	}
 
-	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
-	if !ok {
+	sess := contextSession(request)
+	if sess == nil {
 		log.Println("NO SESSION")
-		return writeJSON(writer, http.StatusInternalServerError, nil)
+		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
 
 	p := models.Post{
@@ -168,9 +162,8 @@ func GetUsers(writer http.ResponseWriter, request *http.Request) error {
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) error {
-	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
-	if !ok {
-		writer.WriteHeader(http.StatusInternalServerError)
+	sess := contextSession(request)
+	if sess == nil {
 		log.Println("NO SESSION")
 		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
@@ -179,27 +172,37 @@ func Logout(writer http.ResponseWriter, request *http.Request) error {
 
 }
 
-func WS(writer http.ResponseWriter, request *http.Request) error {
-	type WSMessage struct {
-		Type string      `json:"type"`
-		Data interface{} `json:"data"`
-	}
+// var (
+// 	upgrader = websocket.Upgrader{
+// 		ReadBufferSize:  1024,
+// 		WriteBufferSize: 1024,
+// 		CheckOrigin: func(r *http.Request) bool {
+// 			return true
+// 		},
+// 	}
+// )
 
-	conn, err := upgrader.Upgrade(writer, request, nil)
-	if err != nil {
-		log.Println("Error Upgrading protocol")
-		return writeJSON(writer, http.StatusServiceUnavailable, nil)
+// func WS(writer http.ResponseWriter, request *http.Request) error {
+// 	type WSMessage struct {
+// 		Type string      `json:"type"`
+// 		Data interface{} `json:"data"`
+// 	}
 
-	}
+// 	conn, err := upgrader.Upgrade(writer, request, nil)
+// 	if err != nil {
+// 		log.Println("Error Upgrading protocol")
+// 		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 
-	conn.WriteJSON(WSMessage{
-		Type: "ping",
-		Data: "Hello",
-	})
-	go func() {
-		for {
+// 	}
 
-		}
-	}()
-	return writeJSON(writer, http.StatusOK, nil)
-}
+// 	conn.WriteJSON(WSMessage{
+// 		Type: "ping",
+// 		Data: "Hello",
+// 	})
+// 	go func() {
+// 		for {
+
+// 		}
+// 	}()
+// 	return writeJSON(writer, http.StatusOK, nil)
+// }
