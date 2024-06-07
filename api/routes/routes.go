@@ -18,9 +18,7 @@ func Root(writer http.ResponseWriter, request *http.Request) error {
 	if sess == nil {
 		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
-	return writeJSON(writer, http.StatusOK, []string{
-		sess.GetName(), sess.GetID(),
-	})
+	return writeJSON(writer, http.StatusOK, sess.GetUser())
 }
 
 func Register(writer http.ResponseWriter, request *http.Request) error {
@@ -69,8 +67,7 @@ func Register(writer http.ResponseWriter, request *http.Request) error {
 	}
 
 	sess := database.NewSession(writer, request)
-	sess.SetID(user.B64)
-	sess.SetName(user.Name)
+	sess.SetUser(user)
 	return writeJSON(writer, http.StatusOK, nil)
 }
 
@@ -86,21 +83,20 @@ func Login(writer http.ResponseWriter, request *http.Request) error {
 		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
-	b64, username, comp, err := database.GetInfoFromMail(parsedMail)
+	comp, err := database.GetUserFromMail(parsedMail)
 	if err != nil {
 		log.Println(err)
 		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
-	err = bcrypt.CompareHashAndPassword(comp, password)
+	err = bcrypt.CompareHashAndPassword(comp.GetPassword(), password)
 	if err != nil {
 		log.Println("INVALID PASSWORD")
 		return writeJSON(writer, http.StatusInternalServerError, nil)
 	}
 
 	sess := database.NewSession(writer, request)
-	sess.SetID(b64)
-	sess.SetName(username)
+	sess.SetUser(comp)
 	return writeJSON(writer, http.StatusOK, nil)
 }
 
@@ -116,8 +112,8 @@ func Post(writer http.ResponseWriter, request *http.Request) error {
 	}
 
 	p := models.Post{
-		UserID:   sess.GetID(),
-		Username: sess.GetName(),
+		UserID:   sess.GetUser().B64,
+		Username: sess.GetUser().Name,
 		Content:  request.FormValue("post-content"),
 		Date:     time.Now(),
 	}

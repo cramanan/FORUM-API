@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"real-time-forum/api/models"
 	"real-time-forum/api/utils"
 	"sync"
 	"time"
@@ -14,30 +15,19 @@ The Session type: a stucture that holds user information.
 It is used in the in-memory private store.
 */
 type Session struct {
-	b64       string
-	user_id   string
-	user_name string
-	expires   time.Time
+	b64     string
+	user    models.User
+	expires time.Time
 }
 
-/*The Session ID setter.*/
-func (sess *Session) SetID(key string) {
-	sess.user_id = key
+/*The Session User setter.*/
+func (sess *Session) SetUser(user models.User) {
+	sess.user = user
 }
 
-/*The Session ID getter.*/
-func (sess *Session) GetID() string {
-	return sess.user_id
-}
-
-/*The Session user_name setter.*/
-func (sess *Session) SetName(key string) {
-	sess.user_name = key
-}
-
-/*The Session user_name getter.*/
-func (sess *Session) GetName() string {
-	return sess.user_name
+/*The Session User getter.*/
+func (sess *Session) GetUser() models.User {
+	return sess.user
 }
 
 /*
