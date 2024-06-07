@@ -77,12 +77,13 @@ func Register(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	user.B64 = utils.GenerateBase64ID(5)
-	err = user.SetPassword([]byte(password))
+	crypt, err := bcrypt.GenerateFromPassword([]byte(password), 11)
 	if err != nil {
 		log.Println(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	user.SetPassword(crypt)
 
 	err = database.AddUser(user)
 	if err != nil {
