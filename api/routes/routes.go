@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"net/mail"
@@ -14,36 +13,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type HandlerFunc func(http.ResponseWriter, *http.Request) error
-
-func HandleFunc(fn HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := fn(w, r); err != nil {
-			writeJSON(w, http.StatusInternalServerError, nil)
-		}
-	}
-}
-
-func writeJSON(writer http.ResponseWriter, status int, v any) error {
-	writer.Header().Add("Content-Type", "application/json")
-	writer.WriteHeader(status)
-	return json.NewEncoder(writer).Encode(v)
-}
-
-func contextSession(request *http.Request) *database.Session {
-	sess, ok := request.Context().Value(contextSessionKey).(*database.Session)
-	if ok {
-		return sess
-	}
-	return nil
-}
-
 func Root(writer http.ResponseWriter, request *http.Request) error {
 	sess := contextSession(request)
 	if sess == nil {
 		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
-	return writeJSON(writer, http.StatusOK, nil)
+	return writeJSON(writer, http.StatusOK, []string{
+		sess.GetName(), sess.GetID(),
+	})
 }
 
 func Register(writer http.ResponseWriter, request *http.Request) error {
@@ -154,11 +131,19 @@ func Post(writer http.ResponseWriter, request *http.Request) error {
 }
 
 func GetPosts(writer http.ResponseWriter, request *http.Request) error {
-	return writeJSON(writer, http.StatusOK, nil)
+	posts, err := database.GetAllPosts()
+	if err != nil {
+		return writeJSON(writer, http.StatusServiceUnavailable, nil)
+	}
+	return writeJSON(writer, http.StatusOK, posts)
 }
 
 func GetUsers(writer http.ResponseWriter, request *http.Request) error {
-	return writeJSON(writer, http.StatusOK, nil)
+	users, err := database.GetAllUsers()
+	if err != nil {
+		return writeJSON(writer, http.StatusServiceUnavailable, nil)
+	}
+	return writeJSON(writer, http.StatusOK, users)
 }
 
 func Logout(writer http.ResponseWriter, request *http.Request) error {
