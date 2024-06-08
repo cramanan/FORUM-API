@@ -108,7 +108,7 @@ func GetAllPosts() ([]models.Post, error) {
 	}
 	defer db.Close()
 
-	r := "SELECT user_id, users.name, content, date FROM posts JOIN users ON users.b64 = posts.user_id;"
+	r := "SELECT posts.id, posts.user_id, users.name, posts.content, posts.date FROM posts JOIN users ON users.b64 = posts.user_id;"
 	rows, err := db.Query(r)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func GetAllPosts() ([]models.Post, error) {
 
 	for rows.Next() {
 		p := models.Post{}
-		err = rows.Scan(&p.UserID, &p.Username, &p.Content, &p.Date)
+		err = rows.Scan(&p.ID, &p.UserID, &p.Username, &p.Content, &p.Date)
 		if err != nil {
 			return nil, err
 		}

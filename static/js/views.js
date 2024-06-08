@@ -134,25 +134,33 @@ class Home extends View {
   }
 
   async getHtml() {
-    const html = `
-    <header class="header">
+    return `
+      <header class="header">
         <h3><a href="/" id="main-title" data-link>REAL-TIME FORUM</a></h3>
-        <button id="logout-button" title="Log Out"><img src="/static/images/logout.svg" width="34"/></button>
-    </header>
-    <main>
-      <form id="post-form">
+        <div id="user-box">
+          <a href="/profile" id="username" data-link></a>
+          <button id="logout-button" title="Log Out">
+            <img src="/static/images/logout.svg" width="34" />
+          </button>
+        </div>
+      </header>
+      <main>
+        <form id="post-form">
           <label for="post-content">Create a P0ST</label>
           <textarea name="post-content" id="post-content"></textarea>
           <button type="submit">P0ST</button>
-      </form>
-      <div id="all-posts"></div>
-    </main>
-    <footer>
-    </footer>`;
-    return html;
+        </form>
+        <div id="all-posts"></div>
+      </main>
+      <footer></footer>`;
   }
 
   async bindListeners() {
+    const username = document.getElementById("username");
+    username.textContent = await fetch(`http://${APIendpoint}/`)
+      .then((resp) => resp.json())
+      .then((v) => `${v.name}#${v.b64}`);
+
     const allposts = document.getElementById("all-posts");
     allposts?.append(...(await this.fetchPosts()));
 
@@ -161,9 +169,6 @@ class Home extends View {
 
     const logout = document.getElementById("logout-button");
     logout?.addEventListener("click", (event) => this.Logout(event));
-
-    // const conn = new WebSocket(`ws://${APIendpoint}/ws`);
-    // conn.onmessage = (event) => console.log(event.data);
   }
 
   async Post(event) {
@@ -193,6 +198,7 @@ class Home extends View {
       const response = await fetch(`http://${APIendpoint}/getposts`);
       const datas = await response.json();
       datas.forEach((post) => {
+        // create elements to avoid injections
         const div = document.createElement("div");
         div.className = "post";
         const h2 = document.createElement("h2");
@@ -250,4 +256,22 @@ class Profile extends View {
   }
 }
 
-export { View, Home, Connect, _404, Profile };
+class Chat extends View {
+  constructor() {
+    super();
+    this.setTitle("Chat");
+  }
+
+  async getHtml() {
+    return `
+      <header>
+        <h1>Chat</h1>
+      </header>
+      <main>
+        <ul id="users">Flemme lol.</ul>
+      </main>
+    `;
+  }
+}
+
+export { View, Home, Connect, _404, Profile, Chat };

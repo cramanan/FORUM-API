@@ -17,6 +17,19 @@ body {
     font-size: 24px;
 }
 
+#user-box{
+    width: 200px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#user-box #username{
+    color: aliceblue;
+    text-decoration: none;
+}
+
 #logout-button {
     background: none;
     border: none;

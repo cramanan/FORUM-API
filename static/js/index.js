@@ -1,8 +1,8 @@
-import { Home, Connect, _404, Profile } from "./views.js";
+import { Home, Connect, _404, Profile, Chat } from "./views.js";
 
 const APIendpoint = "localhost:8080/api";
 
-const Authorized = async () => {
+const Protected = async () => {
   try {
     const authorized = await fetch(`http://${APIendpoint}/`, {
       credentials: "include",
@@ -16,9 +16,10 @@ const Authorized = async () => {
 
 const router = async () => {
   const routes = [
-    { path: "/", view: Home, Authorized },
-    { path: "/connect", view: Connect, Authorized: async () => true },
-    { path: "/profile", view: Profile, Authorized },
+    { path: "/", view: Home, Protected },
+    { path: "/connect", view: Connect, Protected: async () => true },
+    { path: "/profile", view: Profile, Protected },
+    { path: "/chat", view: Chat, Protected },
   ];
 
   const potentialMatches = routes.map((route) => ({
@@ -30,12 +31,12 @@ const router = async () => {
 
   if (!match) {
     match = {
-      route: { path: "/", view: _404, Authorized: async () => true },
+      route: { path: "/", view: _404, Protected: async () => true },
       isMatch: false,
     };
   }
 
-  if (!(await match.route.Authorized())) {
+  if (!(await match.route.Protected())) {
     match = {
       route: { path: "/connect", view: Connect },
       isMatch: true,

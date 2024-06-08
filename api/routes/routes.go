@@ -41,6 +41,7 @@ func Register(writer http.ResponseWriter, request *http.Request) error {
 		user.Gender == "" ||
 		user.FirstName == "" ||
 		user.LastName == "" {
+
 		return writeJSON(writer, http.StatusBadRequest, nil)
 	}
 
@@ -129,6 +130,7 @@ func Post(writer http.ResponseWriter, request *http.Request) error {
 func GetPosts(writer http.ResponseWriter, request *http.Request) error {
 	posts, err := database.GetAllPosts()
 	if err != nil {
+		log.Println(err)
 		return writeJSON(writer, http.StatusServiceUnavailable, nil)
 	}
 	return writeJSON(writer, http.StatusOK, posts)
