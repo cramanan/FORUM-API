@@ -1,20 +1,21 @@
 package models
 
+import "time"
+
 type User struct {
-	B64       string `json:"b64"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	password  []byte
-	Gender    string `json:"gender"`
-	Age       int    `json:"age"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	ID      string    `json:"id"`
+	Email   string    `json:"email"`
+	Name    string    `json:"name"`
+	Created time.Time `json:"created"`
 }
 
-func (u *User) GetPassword() []byte {
-	return u.password
+type RegisterRequest struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
-func (u *User) SetPassword(password []byte) {
-	u.password = password
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }

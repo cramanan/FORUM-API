@@ -50,40 +50,40 @@ class Connect extends View {
 
   async getHtml() {
     return `<div id="connect">
-    <form id="login-form">
+      <form id="login-form">
         <h1>Login</h1>
         <div id="login-server-error"></div>
         <label for="login-email">Email</label>
-        <input type="email" id="login-email" name="login-email" />
+        <input type="email" id="login-email" name="email" />
         <label for="login-password">Password</label>
-        <input type="password" id="login-password" name="login-password" />
+        <input type="password" id="login-password" name="password" />
         <button type="submit">Login</button>
-    </form>
-    <span id="sep"></span>
-    <form id="register-form">
+      </form>
+      <span id="sep"></span>
+      <form id="register-form">
         <h1>Register</h1>
         <div id="register-server-error"></div>
         <label for="register-email">Email</label>
-        <input type="email" id="register-email" name="register-email" />
-        <label for="register-username">Username</label>
-        <input type="text" id="register-username" name="register-username" />
-        <label for="register-password">Password</label>
-        <input type="password" id="register-password" name="register-password" />
-        <label for="register-gender">Gender:</label>
-        <select name="register-gender" id="register-gender">
-            <option value="M">M</option>
-            <option value="F">F</option>
-            <option value="O">Other</option>
+        <input type="email" id="register-email" name="email" />
+        <label for="name">Username</label>
+        <input type="text" id="name" name="name" />
+        <label for="password">Password</label>
+        <input type="password" id="register-password" name="password" />
+        <label for="gender">Gender:</label>
+        <select name="gender" id="gender">
+          <option value="M">M</option>
+          <option value="F">F</option>
+          <option value="O">Other</option>
         </select>
-        <label for="register-age">Age</label>
-        <input type="number" name="register-age" id="register-age">
-        <label for="register-first-name">First Name</label>
-        <input type="text" name="register-first-name" id="register-first-name">
-        <label for="register-last-name">Last Name</label>
-        <input type="text" name="register-last-name" id="register-last-name">
+        <label for="age">Age</label>
+        <input type="number" name="age" id="age" />
+        <label for="first-name">First Name</label>
+        <input type="text" name="first-name" id="first-name" />
+        <label for="last-name">Last Name</label>
+        <input type="text" name="last-name" id="last-name" />
         <button type="submit">Register</button>
-    </form>
-</div>`;
+      </form>
+    </div>`;
   }
 
   bindListeners() {
@@ -96,11 +96,15 @@ class Connect extends View {
   async HandleRegisterSubmit(event) {
     event.preventDefault();
     try {
-      const data = new FormData(event.target);
+      const data = Object.fromEntries(new FormData(event.target).entries());
       const response = await fetch(`http://${APIendpoint}/register`, {
-        method: "post",
-        body: data,
         credentials: "include",
+        method: "post",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
       if (response.ok) {
         navigateTo("/");
@@ -113,11 +117,15 @@ class Connect extends View {
   async HandleLoginSubmit(event) {
     event.preventDefault();
     try {
-      const data = new FormData(event.target);
+      const data = Object.fromEntries(new FormData(event.target).entries());
       const response = await fetch(`http://${APIendpoint}/login`, {
-        method: "post",
-        body: data,
         credentials: "include",
+        method: "post",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
       if (response.ok) navigateTo("/");
     } catch (reason) {
@@ -159,7 +167,7 @@ class Home extends View {
     const username = document.getElementById("username");
     username.textContent = await fetch(`http://${APIendpoint}/`)
       .then((resp) => resp.json())
-      .then((v) => `${v.name}#${v.b64}`);
+      .then((v) => `${v.name}#${v.id}`);
 
     const allposts = document.getElementById("all-posts");
     allposts?.append(...(await this.fetchPosts()));

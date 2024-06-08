@@ -3,9 +3,15 @@ package models
 import "time"
 
 type Post struct {
-	ID       int       `json:"id"`
-	UserID   string    `json:"userid"`
+	ID       string    `json:"id"`
+	UserID   string    `json:"userID"`
 	Username string    `json:"username"`
 	Content  string    `json:"content"`
-	Date     time.Time `json:"date"`
+	Created  time.Time `json:"created"`
+}
+
+type PostRequest struct {
+	Content  string `json:"content"`
+	UserID   string `json:"userID"`
+	Username string `json:"username"`
 }
