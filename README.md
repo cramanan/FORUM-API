@@ -1,1 +1,1 @@
-# Real-Time-Forum ![alt text](https://zone01normandie.org/git/cramanan/real-time-forum/raw/branch/API/static/images/favicon.ico)
+# ⚡ Real-Time-Forum ⚡
