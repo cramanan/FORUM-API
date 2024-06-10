@@ -267,7 +267,11 @@ class Profile extends View {
     return `
       <h1>Profile</h1>
       <div>${Object.entries(info)
-        .map(([k, v]) => `<div>${k} : ${v}</div>`)
+        .map(([k, v]) => {
+          const div = document.createElement("div");
+          div.textContent = `${k} : ${v}`;
+          return div.outerHTML;
+        })
         .join("")}</div>
     `;
   }

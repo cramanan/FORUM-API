@@ -11,14 +11,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const path = "api/database/database.sqlite"
-
 type Sqlite3Store struct {
 	db *sql.DB
 }
 
 func NewSqlite3Store() (*Sqlite3Store, error) {
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3", "api/database/database.sqlite")
 	if err != nil {
 		return nil, err
 	}
