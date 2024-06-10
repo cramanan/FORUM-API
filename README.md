@@ -1,5 +1,31 @@
 # Real-Time-Forum ⚡
+
+This project follows the [MVC](https://developer.mozilla.org/en-US/docs/Glossary/MVC) pattern as a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application).
+
 ...
+
+## Libraries used
+
+- For the Database:
+
+    [database/sql](https://pkg.go.dev/database/sql) : Golang's standard library for SQL database that requires a driver.
+
+    [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) : This library provides the sqlite3 driver needed by database/sql.
+
+    [context](https://pkg.go.dev/context) : Golang's standard library Context type used to begin SQL transactions and handle concurrency.
+
+- For the HTTP Server:
+    [net/http](https://pkg.go.dev/net/http) :
+    We created our own API type that inherits from Golang's http.Server. We implemented a built-in Session Storage and a DB Storage. [See API struct](/api/api.go)
+
+    [encoding/json](https://pkg.go.dev/encoding/json) : 
+    The API only communicates in JSON. HTTP requests bodies are decoded from raw JSON and responses are encoded in JSON. [See examples](#the-api)
+
+    [gorilla/websocket](https://pkg.go.dev/github.com/gorilla/websocket) : 
+    The API also provide a WebSocket connection for live-chatting. The messages are also encoded/decoded in JSON.
+
+
+
 ## Setup
 - ### Golang Source code:
     To build the project from source code:
