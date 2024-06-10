@@ -43,7 +43,7 @@ This project follows the [MVC](https://developer.mozilla.org/en-US/docs/Glossary
         go run .
         ```
 - ### Docker:
-    This project comes with a Dockerfile. You will need to run these commands:
+    This project comes with a Dockerfile. You will need to run these commands (might need to run it as root):
     1. Build the image:
         ```
         docker image build -t <image-name> .
@@ -62,8 +62,11 @@ This project follows the [MVC](https://developer.mozilla.org/en-US/docs/Glossary
 This API is fully written in Golang and its response are formatted in JSON using [Golang json package](https://pkg.go.dev/encoding/json):
 
 Example:
+
+Request URL : http://localhost:8080/api/users
+
+Request Body:
 ```json
-    // http://localhost:8080/api/users
     [
         {
             "id": "c1ec9487-5c5c-46a4-a72c-947f71bd5c88",
@@ -71,6 +74,8 @@ Example:
             "name": "Wally",
             "created": "2024-06-08T19:16:19.247313513Z"
         },
+
+        ...
     ]
 ```
 
@@ -80,21 +85,27 @@ To send a register / login request, you must format it into JSON and allow cooki
 
 The following fields are required by the auth endpoints:
 - Register endpoint:
+
+    Request URL: http://localhost:8080/api/login
+
+    Request Body:
     ```json
-        // endpoint : http://localhost:8080/api/register
         {
             "email" : "<example>@<address>.<any>",  
             "name" : "<example>",                   
             "password": "<password>",               
-            "age" : "<number>",                     // as a string
+            "age" : "<number>", // as a string
             "gender" : "<any>",                     
             "firstName" : "<example>",              
             "lastName" : "<example>"                
         }
     ```
 - Login endpoint:
+
+    Request URL: http://localhost:8080/api/login
+
+    Request Body:
     ```json
-        // endpoint : http://localhost:8080/api/login
         {
             "email" : "<example>@<address>.<any>",
             "password": "<secret-password>"
