@@ -1,0 +1,9 @@
+users
+categorie
+posts
+comments
+likesComments
+postscategories
+postlikes
+
+//Changes currentID(INT) en TEXT
