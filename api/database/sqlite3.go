@@ -147,7 +147,7 @@ func (store *Sqlite3Store) GetUsers(ctx context.Context) ([]*models.User, error)
 		return nil, err
 	}
 	defer tx.Rollback()
-	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, created FROM users;")
+	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, gender, age, first_name , last_name, created FROM users;")
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +160,10 @@ func (store *Sqlite3Store) GetUsers(ctx context.Context) ([]*models.User, error)
 			&user.ID,
 			&user.Email,
 			&user.Name,
+			&user.Age,
+			&user.Gender,
+			&user.FirstName,
+			&user.LastName,
 			&user.Created,
 		)
 		if err != nil {
