@@ -160,7 +160,7 @@ class Home extends View {
       <main>
         <form id="post-form">
           <label for="post-content">Create a P0ST</label>
-          <textarea name="post-content" id="post-content"></textarea>
+          <textarea name="content" id="post-content"></textarea>
           <button type="submit">P0ST</button>
         </form>
         <div id="all-posts"></div>
@@ -187,11 +187,15 @@ class Home extends View {
   async Post(event) {
     event.preventDefault();
     try {
-      const data = new FormData(event.target);
+      const data = Object.fromEntries(new FormData(event.target).entries());
       const response = await fetch(`http://${APIendpoint}/post`, {
-        method: "post",
-        body: data,
         credentials: "include",
+        method: "post",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {

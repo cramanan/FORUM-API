@@ -150,6 +150,12 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 		id[i] = letters[rand.Intn(len(letters))]
 	}
 
+	tx, err := store.db.BeginTx(req.Ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	post := &models.Post{
 		ID:       string(id),
 		UserID:   req.UserID,
@@ -158,7 +164,7 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 		Created:  time.Now().UTC(),
 	}
 
-	_, err := store.db.Exec("INSERT INTO posts VALUES (?, ?, ?, ?);",
+	_, err = tx.ExecContext(req.Ctx, "INSERT INTO posts VALUES (?, ?, ?, ?);",
 		post.ID,
 		post.UserID,
 		post.Content,
@@ -167,7 +173,10 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 	if err != nil {
 		return nil, err
 	}
-
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
 	return post, nil
 }
 

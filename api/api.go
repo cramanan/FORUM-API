@@ -1,12 +1,14 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/mail"
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
 	"strconv"
+	"time"
 )
 
 type API struct {
@@ -183,6 +185,9 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 
 	postReq.UserID = session.User.ID
 	postReq.Username = session.User.Name
+	var cancel context.CancelFunc
+	postReq.Ctx, cancel = context.WithTimeout(request.Context(), 3*time.Second)
+	defer cancel()
 
 	post, err := server.Storage.CreatePost(postReq)
 	if err != nil {
