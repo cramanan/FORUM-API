@@ -102,7 +102,7 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 }
 
 func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, error) {
-	tx, err := store.db.BeginTx(req.Ctx, nil)
+	tx, err := store.db.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +112,6 @@ func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, erro
 	password := []byte{}
 	user := new(models.User)
 
-	if err != nil {
-		return nil, err
-	}
 	err = row.Scan(
 		&user.ID,
 		&user.Email,
