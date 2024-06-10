@@ -106,6 +106,8 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 		writeJSON(writer, http.StatusBadRequest, "Age field is invalid")
 	}
 
+	registerReq.Ctx, registerReq.CancelCtx = context.WithTimeout(request.Context(), 3*time.Second)
+
 	user, err := server.Storage.RegisterUser(registerReq)
 	if err != nil {
 		return err
@@ -134,6 +136,7 @@ func (server *API) Login(writer http.ResponseWriter, request *http.Request) erro
 		return writeJSON(writer, http.StatusBadRequest, "Missing Credentials")
 	}
 
+	loginReq.Ctx, loginReq.CancelCtx = context.WithTimeout(request.Context(), 3*time.Second)
 	user, err := server.Storage.LogUser(loginReq)
 	if err != nil {
 		return writeJSON(writer, http.StatusBadRequest, "Invalid Password")

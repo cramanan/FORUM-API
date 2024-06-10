@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type User struct {
 	ID        string    `json:"id"`
@@ -21,9 +24,13 @@ type RegisterRequest struct {
 	Age       string `json:"age"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
+	Ctx       context.Context
+	CancelCtx context.CancelFunc
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Ctx       context.Context
+	CancelCtx context.CancelFunc
 }

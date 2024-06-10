@@ -61,6 +61,12 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 		return nil, err
 	}
 
+	tx, err := store.db.BeginTx(req.Ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	user := &models.User{
 		ID:        id.String(),
 		Email:     req.Email,
@@ -72,7 +78,7 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 		Created:   time.Now().UTC(),
 	}
 
-	_, err = store.db.Exec("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
+	_, err = tx.ExecContext(req.Ctx, "INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		user.ID,
 		user.Email,
 		user.Name,
@@ -87,14 +93,29 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 		return nil, err
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
 func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, error) {
-	row := store.db.QueryRow("SELECT * FROM users WHERE email = ?;", req.Email)
+	tx, err := store.db.BeginTx(req.Ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	row := tx.QueryRowContext(req.Ctx, "SELECT * FROM users WHERE email = ?;", req.Email)
 	password := []byte{}
 	user := new(models.User)
-	err := row.Scan(
+
+	if err != nil {
+		return nil, err
+	}
+	err = row.Scan(
 		&user.ID,
 		&user.Email,
 		&user.Name,
@@ -105,6 +126,11 @@ func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, erro
 		&user.LastName,
 		&user.Created,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return nil, err
 	}
