@@ -25,12 +25,10 @@ type RegisterRequest struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Ctx       context.Context
-	CancelCtx context.CancelFunc
 }
 
 type LoginRequest struct {
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Ctx       context.Context
-	CancelCtx context.CancelFunc
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Ctx      context.Context
 }

@@ -119,8 +119,9 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 		return writeJSON(writer, http.StatusBadRequest, "Age field is invalid")
 	}
 
-	registerReq.Ctx, registerReq.CancelCtx = context.WithTimeout(request.Context(), database.TransactionTimeout)
-
+	var cancel context.CancelFunc
+	registerReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
 	user, err := server.Storage.RegisterUser(registerReq)
 	if err != nil {
 		return err
@@ -151,8 +152,9 @@ func (server *API) Login(writer http.ResponseWriter, request *http.Request) erro
 	if _, err = mail.ParseAddress(loginReq.Email); err != nil {
 		return writeJSON(writer, http.StatusBadRequest, "Invalid Email")
 	}
-
-	loginReq.Ctx, loginReq.CancelCtx = context.WithTimeout(request.Context(), database.TransactionTimeout)
+	var cancel context.CancelFunc
+	loginReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
 	user, err := server.Storage.LogUser(loginReq)
 	if err != nil {
 		return writeJSON(writer, http.StatusBadRequest, "Invalid Password")
@@ -165,7 +167,10 @@ func (server *API) Login(writer http.ResponseWriter, request *http.Request) erro
 }
 
 func (server *API) GetUsers(writer http.ResponseWriter, request *http.Request) error {
-	users, err := server.Storage.GetUsers()
+	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
+
+	users, err := server.Storage.GetUsers(ctx)
 	if err != nil {
 		return err
 	}
@@ -217,7 +222,9 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 }
 
 func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) error {
-	posts, err := server.Storage.GetPosts()
+	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
+	posts, err := server.Storage.GetPosts(ctx)
 	if err != nil {
 		return err
 	}

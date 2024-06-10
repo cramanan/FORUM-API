@@ -225,7 +225,9 @@ class Home extends View {
         h2.textContent = post.username;
         const p = document.createElement("p");
         p.textContent = post.content;
-        div.append(h2, p);
+        const date = document.createElement("div");
+        date.textContent = new Date(post.created).toUTCString();
+        div.append(h2, p, date);
         postsHTML.push(div);
       });
     } catch (error) {

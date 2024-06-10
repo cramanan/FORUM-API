@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"math/rand"
 	"real-time-forum/api/models"
@@ -140,8 +141,13 @@ func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, erro
 	return user, nil
 }
 
-func (store *Sqlite3Store) GetUsers() ([]*models.User, error) {
-	rows, err := store.db.Query("SELECT id, email, name, created FROM users;")
+func (store *Sqlite3Store) GetUsers(ctx context.Context) ([]*models.User, error) {
+	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, created FROM users;")
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +165,12 @@ func (store *Sqlite3Store) GetUsers() ([]*models.User, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		users = append(users, user)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
 	}
 
 	return users, nil
@@ -203,11 +213,16 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 	return post, nil
 }
 
-func (store *Sqlite3Store) GetPosts() ([]*models.Post, error) {
-	rows, err := store.db.Query(
+func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error) {
+	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.QueryContext(ctx,
 		`SELECT posts.id, users.id, users.name, posts.content, posts.created 
 			FROM posts JOIN users ON posts.userid = users.id;`)
-
 	if err != nil {
 		return nil, err
 	}
@@ -228,6 +243,10 @@ func (store *Sqlite3Store) GetPosts() ([]*models.Post, error) {
 		}
 
 		posts = append(posts, post)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
 	}
 
 	return posts, nil
