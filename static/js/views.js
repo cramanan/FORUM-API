@@ -77,10 +77,10 @@ class Connect extends View {
         </select>
         <label for="age">Age</label>
         <input type="number" name="age" id="age" />
-        <label for="first-name">First Name</label>
-        <input type="text" name="first-name" id="first-name" />
-        <label for="last-name">Last Name</label>
-        <input type="text" name="last-name" id="last-name" />
+        <label for="firstName">First Name</label>
+        <input type="text" name="firstName" id="firstName" />
+        <label for="lastName">Last Name</label>
+        <input type="text" name="lastName" id="lastName" />
         <button type="submit">Register</button>
       </form>
     </div>`;
@@ -97,6 +97,7 @@ class Connect extends View {
     event.preventDefault();
     try {
       const data = Object.fromEntries(new FormData(event.target).entries());
+      console.log(data);
       const response = await fetch(`http://${APIendpoint}/register`, {
         credentials: "include",
         method: "post",
@@ -106,8 +107,10 @@ class Connect extends View {
         },
         body: JSON.stringify(data),
       });
-      if (response.ok) {
-        navigateTo("/");
+      if (response.ok) navigateTo("/");
+      else {
+        document.getElementById("register-server-error").textContent =
+          await response.json();
       }
     } catch (reason) {
       console.log(reason);
@@ -142,11 +145,13 @@ class Home extends View {
   }
 
   async getHtml() {
-    return `
-      <header class="header">
+    return ` <header class="header">
         <h3><a href="/" id="main-title" data-link>REAL-TIME FORUM</a></h3>
         <div id="user-box">
-          <a href="/profile" id="username" data-link></a>
+          <a href="/profile" data-link>
+            <div id="username"></div>
+            <div id="id"></div>
+          </a>
           <button id="logout-button" title="Log Out">
             <img src="/static/images/logout.svg" width="34" />
           </button>
@@ -167,7 +172,7 @@ class Home extends View {
     const username = document.getElementById("username");
     username.textContent = await fetch(`http://${APIendpoint}/`)
       .then((resp) => resp.json())
-      .then((v) => `${v.name}#${v.id}`);
+      .then((v) => v.name);
 
     const allposts = document.getElementById("all-posts");
     allposts?.append(...(await this.fetchPosts()));

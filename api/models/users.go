@@ -3,16 +3,24 @@ package models
 import "time"
 
 type User struct {
-	ID      string    `json:"id"`
-	Email   string    `json:"email"`
-	Name    string    `json:"name"`
-	Created time.Time `json:"created"`
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Gender    string    `json:"gender"`
+	Age       string    `json:"age"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Created   time.Time `json:"created"`
 }
 
 type RegisterRequest struct {
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Password  string `json:"password"`
+	Gender    string `json:"gender"`
+	Age       string `json:"age"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
 }
 
 type LoginRequest struct {

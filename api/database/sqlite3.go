@@ -28,6 +28,10 @@ func NewSqlite3Store() (*Sqlite3Store, error) {
 		email TEXT UNIQUE,
 		name TEXT,
 		password BLOB,
+		gender TEXT,
+		age INTEGER,
+		first_name TEXT,
+		last_name TEXT,
 		created DATE
 	);
 	
@@ -58,17 +62,25 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 	}
 
 	user := &models.User{
-		ID:      id.String(),
-		Email:   req.Email,
-		Name:    req.Name,
-		Created: time.Now().UTC(),
+		ID:        id.String(),
+		Email:     req.Email,
+		Name:      req.Name,
+		Gender:    req.Gender,
+		Age:       req.Age,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Created:   time.Now().UTC(),
 	}
 
-	_, err = store.db.Exec("INSERT INTO users VALUES (?, ?, ?, ?, ?);",
+	_, err = store.db.Exec("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		user.ID,
 		user.Email,
 		user.Name,
 		crypt,
+		user.Gender,
+		user.Age,
+		user.FirstName,
+		user.LastName,
 		user.Created,
 	)
 	if err != nil {
@@ -87,6 +99,10 @@ func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, erro
 		&user.Email,
 		&user.Name,
 		&password,
+		&user.Gender,
+		&user.Age,
+		&user.FirstName,
+		&user.LastName,
 		&user.Created,
 	)
 	if err != nil {

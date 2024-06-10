@@ -3,8 +3,10 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"net/mail"
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
+	"strconv"
 )
 
 type API struct {
@@ -68,7 +70,6 @@ func (server *API) Protected(next http.HandlerFunc) http.HandlerFunc {
 			writeJSON(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -85,10 +86,22 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 	}
 
 	if registerReq.Email == "" ||
+		registerReq.Name == "" ||
 		registerReq.Password == "" ||
-		registerReq.Name == "" {
+		registerReq.Gender == "" ||
+		registerReq.Age == "" ||
+		registerReq.FirstName == "" ||
+		registerReq.LastName == "" {
 
 		return writeJSON(writer, http.StatusBadRequest, "Missing Credentials")
+	}
+
+	if _, err = mail.ParseAddress(registerReq.Email); err != nil {
+		writeJSON(writer, http.StatusBadRequest, "Invalid Email")
+	}
+
+	if _, err = strconv.Atoi(registerReq.Age); err != nil {
+		writeJSON(writer, http.StatusBadRequest, "Age field is invalid")
 	}
 
 	user, err := server.Storage.RegisterUser(registerReq)
