@@ -97,7 +97,6 @@ class Connect extends View {
     event.preventDefault();
     try {
       const data = Object.fromEntries(new FormData(event.target).entries());
-      console.log(data);
       const response = await fetch(`http://${APIendpoint}/register`, {
         credentials: "include",
         method: "post",
@@ -131,6 +130,10 @@ class Connect extends View {
         body: JSON.stringify(data),
       });
       if (response.ok) navigateTo("/");
+      else {
+        document.getElementById("login-server-error").textContent =
+          await response.json();
+      }
     } catch (reason) {
       console.log(reason);
     }
@@ -212,7 +215,7 @@ class Home extends View {
   async fetchPosts() {
     const postsHTML = [];
     try {
-      const response = await fetch(`http://${APIendpoint}/getposts`);
+      const response = await fetch(`http://${APIendpoint}/posts`);
       const datas = await response.json();
       datas.forEach((post) => {
         // create elements to avoid injections

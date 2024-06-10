@@ -8,7 +8,6 @@ import (
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -31,14 +30,14 @@ func NewAPI(addr string) (*API, error) {
 	})
 	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	router.HandleFunc("/api/", server.Protected(HandleFunc(server.ReadSession)))
+	router.HandleFunc("/api/", server.Protected((server.ReadSession)))
 
 	router.HandleFunc("/api/register", HandleFunc(server.Register))
 	router.HandleFunc("/api/login", HandleFunc(server.Login))
 
-	router.HandleFunc("/api/users", server.Protected(HandleFunc(server.GetUsers)))
-	router.HandleFunc("/api/post", server.Protected(HandleFunc(server.Post)))
-	router.HandleFunc("/api/posts", server.Protected(HandleFunc(server.GetPosts)))
+	router.HandleFunc("/api/users", server.Protected((server.GetUsers)))
+	router.HandleFunc("/api/posts", server.Protected((server.GetPosts)))
+	router.HandleFunc("/api/post", server.Protected((server.Post)))
 
 	server.Upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -77,14 +76,16 @@ func HandleFunc(fn HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (server *API) Protected(next http.HandlerFunc) http.HandlerFunc {
+func (server *API) Protected(fn HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := server.Sessions.GetSession(r)
 		if err != nil {
 			writeJSON(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
-		next.ServeHTTP(w, r)
+		if err := fn(w, r); err != nil {
+			writeJSON(w, http.StatusInternalServerError, err.Error())
+		}
 	})
 }
 
@@ -111,14 +112,14 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 	}
 
 	if _, err = mail.ParseAddress(registerReq.Email); err != nil {
-		writeJSON(writer, http.StatusBadRequest, "Invalid Email")
+		return writeJSON(writer, http.StatusBadRequest, "Invalid Email")
 	}
 
 	if _, err = strconv.Atoi(registerReq.Age); err != nil {
-		writeJSON(writer, http.StatusBadRequest, "Age field is invalid")
+		return writeJSON(writer, http.StatusBadRequest, "Age field is invalid")
 	}
 
-	registerReq.Ctx, registerReq.CancelCtx = context.WithTimeout(request.Context(), 3*time.Second)
+	registerReq.Ctx, registerReq.CancelCtx = context.WithTimeout(request.Context(), database.TransactionTimeout)
 
 	user, err := server.Storage.RegisterUser(registerReq)
 	if err != nil {
@@ -144,11 +145,14 @@ func (server *API) Login(writer http.ResponseWriter, request *http.Request) erro
 
 	if loginReq.Email == "" ||
 		loginReq.Password == "" {
-
 		return writeJSON(writer, http.StatusBadRequest, "Missing Credentials")
 	}
 
-	loginReq.Ctx, loginReq.CancelCtx = context.WithTimeout(request.Context(), 3*time.Second)
+	if _, err = mail.ParseAddress(loginReq.Email); err != nil {
+		return writeJSON(writer, http.StatusBadRequest, "Invalid Email")
+	}
+
+	loginReq.Ctx, loginReq.CancelCtx = context.WithTimeout(request.Context(), database.TransactionTimeout)
 	user, err := server.Storage.LogUser(loginReq)
 	if err != nil {
 		return writeJSON(writer, http.StatusBadRequest, "Invalid Password")
@@ -201,7 +205,7 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 	postReq.UserID = session.User.ID
 	postReq.Username = session.User.Name
 	var cancel context.CancelFunc
-	postReq.Ctx, cancel = context.WithTimeout(request.Context(), 3*time.Second)
+	postReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 
 	post, err := server.Storage.CreatePost(postReq)

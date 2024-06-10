@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const TransactionTimeout = 3 * time.Second
+
 type Sqlite3Store struct {
 	db *sql.DB
 }
