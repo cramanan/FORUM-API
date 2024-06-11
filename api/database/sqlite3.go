@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"math/rand"
 	"real-time-forum/api/models"
 	"time"
@@ -39,6 +40,7 @@ func NewSqlite3Store() (*Sqlite3Store, error) {
 	CREATE TABLE IF NOT EXISTS posts (
 		id TEXT PRIMARY KEY,
 		userid TEXT REFERENCES users(id),
+		categories BLOB,
 		content TEXT,
 		created DATE
 	);`)
@@ -194,16 +196,23 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 	defer tx.Rollback()
 
 	post := &models.Post{
-		ID:       string(id),
-		UserID:   req.UserID,
-		Username: req.Username,
-		Content:  req.Content,
-		Created:  time.Now().UTC(),
+		ID:         string(id),
+		UserID:     req.UserID,
+		Username:   req.Username,
+		Categories: req.Categories,
+		Content:    req.Content,
+		Created:    time.Now().UTC(),
 	}
 
-	_, err = tx.ExecContext(req.Ctx, "INSERT INTO posts VALUES (?, ?, ?, ?);",
+	byteCategories, err := json.Marshal(post.Categories)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = tx.ExecContext(req.Ctx, "INSERT INTO posts VALUES (?, ?, ? ,?, ?);",
 		post.ID,
 		post.UserID,
+		byteCategories,
 		post.Content,
 		post.Created,
 	)
@@ -225,13 +234,14 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error)
 	defer tx.Rollback()
 
 	rows, err := tx.QueryContext(ctx,
-		`SELECT posts.id, users.id, users.name, posts.content, posts.created 
+		`SELECT posts.id, users.id, users.name, posts.categories, posts.content, posts.created 
 			FROM posts JOIN users ON posts.userid = users.id;`)
 	if err != nil {
 		return nil, err
 	}
 
 	posts := []*models.Post{}
+	byteCategories := []byte{}
 
 	for rows.Next() {
 		post := new(models.Post)
@@ -239,9 +249,15 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error)
 			&post.ID,
 			&post.UserID,
 			&post.Username,
+			&byteCategories,
 			&post.Content,
 			&post.Created,
 		)
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal(byteCategories, &post.Categories)
 		if err != nil {
 			return nil, err
 		}

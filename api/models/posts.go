@@ -6,16 +6,18 @@ import (
 )
 
 type Post struct {
-	ID       string    `json:"id"`
-	UserID   string    `json:"userID"`
-	Username string    `json:"username"`
-	Content  string    `json:"content"`
-	Created  time.Time `json:"created"`
+	ID         string    `json:"id"`
+	UserID     string    `json:"userID"`
+	Username   string    `json:"username"`
+	Categories []string  `json:"categories"`
+	Content    string    `json:"content"`
+	Created    time.Time `json:"created"`
 }
 
 type PostRequest struct {
-	Content  string `json:"content"`
-	UserID   string `json:"userID"`
-	Username string `json:"username"`
-	Ctx      context.Context
+	Content    string   `json:"content"`
+	UserID     string   `json:"userID"`
+	Username   string   `json:"username"`
+	Categories []string `json:"categories"`
+	Ctx        context.Context
 }

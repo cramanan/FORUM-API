@@ -8,15 +8,13 @@ import (
 	"real-time-forum/api/database"
 	"real-time-forum/api/models"
 	"strconv"
-
-	"github.com/gorilla/websocket"
 )
 
 type API struct {
 	http.Server
 	Storage  *database.Sqlite3Store
 	Sessions *database.SessionStore
-	Upgrader websocket.Upgrader
+	// Upgrader websocket.Upgrader
 }
 
 func NewAPI(addr string) (*API, error) {
@@ -39,14 +37,14 @@ func NewAPI(addr string) (*API, error) {
 	router.HandleFunc("/api/posts", server.Protected((server.GetPosts)))
 	router.HandleFunc("/api/post", server.Protected((server.Post)))
 
-	server.Upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-	router.HandleFunc("/api/ws", (HandleFunc(server.WS)))
+	// server.Upgrader = websocket.Upgrader{
+	// 	ReadBufferSize:  1024,
+	// 	WriteBufferSize: 1024,
+	// 	CheckOrigin: func(r *http.Request) bool {
+	// 		return true
+	// 	},
+	// }
+	// router.HandleFunc("/api/ws", (HandleFunc(server.WS)))
 
 	server.Server.Handler = router
 
@@ -232,11 +230,11 @@ func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) e
 	return writeJSON(writer, http.StatusOK, posts)
 }
 
-func (server *API) WS(writer http.ResponseWriter, request *http.Request) error {
-	conn, err := server.Upgrader.Upgrade(writer, request, nil)
-	if err != nil {
-		return writeJSON(writer, http.StatusInternalServerError, "Error: connecting to the WebSocket.")
-	}
-	conn.Close()
-	return nil
-}
+// func (server *API) WS(writer http.ResponseWriter, request *http.Request) error {
+// 	conn, err := server.Upgrader.Upgrade(writer, request, nil)
+// 	if err != nil {
+// 		return writeJSON(writer, http.StatusInternalServerError, "Error: connecting to the WebSocket.")
+// 	}
+// 	conn.Close()
+// 	return nil
+// }
