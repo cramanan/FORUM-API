@@ -15,9 +15,7 @@ import (
 
 const TransactionTimeout = 3 * time.Second
 
-type Sqlite3Store struct {
-	db *sql.DB
-}
+type Sqlite3Store struct{ *sql.DB }
 
 func NewSqlite3Store() (*Sqlite3Store, error) {
 	db, err := sql.Open("sqlite3", "api/database/database.sqlite")
@@ -56,15 +54,13 @@ func NewSqlite3Store() (*Sqlite3Store, error) {
 		return nil, err
 	}
 
-	return &Sqlite3Store{
-		db: db,
-	}, nil
+	return &Sqlite3Store{db}, nil
 }
 
 var ErrConflict = errors.New("Conflict")
 
 func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.User, error) {
-	tx, err := store.db.BeginTx(req.Ctx, nil)
+	tx, err := store.BeginTx(req.Ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +81,7 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 		return nil, err
 	}
 
-	tx, err = store.db.BeginTx(req.Ctx, nil)
+	tx, err = store.BeginTx(req.Ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +132,7 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 }
 
 func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, error) {
-	tx, err := store.db.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := store.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +171,7 @@ func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, erro
 }
 
 func (store *Sqlite3Store) GetUsers(ctx context.Context, limit, offset int) ([]*models.User, error) {
-	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := store.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +213,7 @@ func (store *Sqlite3Store) GetUsers(ctx context.Context, limit, offset int) ([]*
 
 func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, error) {
 	id := generateBase64ID(5)
-	tx, err := store.db.BeginTx(req.Ctx, nil)
+	tx, err := store.BeginTx(req.Ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +255,7 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 }
 
 func (store *Sqlite3Store) GetPosts(ctx context.Context, limit, offset int) ([]*models.Post, error) {
-	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := store.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +308,7 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context, limit, offset int) ([]*
 }
 
 func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (*models.Comment, error) {
-	tx, err := store.db.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := store.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +337,7 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (*models.Co
 		return nil, err
 	}
 
-	tx, err = store.db.BeginTx(req.Ctx, nil)
+	tx, err = store.BeginTx(req.Ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +371,7 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (*models.Co
 }
 
 func (store *Sqlite3Store) GetComments(ctx context.Context, limit, offset int) ([]*models.Comment, error) {
-	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx, err := store.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
