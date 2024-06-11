@@ -37,6 +37,7 @@ func NewAPI(addr string) (*API, error) {
 	router.HandleFunc("/api/posts", server.Protected(server.GetPosts))
 	router.HandleFunc("/api/post", server.Protected(server.Post))
 	router.HandleFunc("/api/comment", server.Protected(server.Comment))
+	router.HandleFunc("/api/comments", server.Protected(server.GetComments))
 
 	// server.Upgrader = websocket.Upgrader{
 	// 	ReadBufferSize:  1024,
@@ -264,6 +265,17 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 	}
 
 	return writeJSON(writer, http.StatusOK, comment)
+}
+
+func (server *API) GetComments(writer http.ResponseWriter, request *http.Request) error {
+	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
+	comments, err := server.Storage.GetComments(ctx)
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(writer, http.StatusOK, comments)
 }
 
 // func (server *API) WS(writer http.ResponseWriter, request *http.Request) error {

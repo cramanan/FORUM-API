@@ -345,3 +345,36 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (*models.Co
 
 	return comment, nil
 }
+
+func (store *Sqlite3Store) GetComments(ctx context.Context) ([]*models.Comment, error) {
+	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.QueryContext(ctx, "SELECT * FROM comments;")
+	if err != nil {
+		return nil, err
+	}
+
+	comments := []*models.Comment{}
+
+	for rows.Next() {
+		comment := new(models.Comment)
+		err = rows.Scan(
+			&comment.ID,
+			&comment.PostID,
+			&comment.UserID,
+			&comment.Content,
+			&comment.Created,
+		)
+		if err != nil {
+			return nil, err // May continue instead of return
+		}
+
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
+}
