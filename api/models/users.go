@@ -5,17 +5,12 @@ import (
 	"time"
 )
 
-type QueryParams struct {
-	Limit  int `json:"limit"`
-	Offset int `json:"offset"`
-}
-
 type User struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	Gender    string    `json:"gender"`
-	Age       string    `json:"age"`
+	Age       int       `json:"age"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Created   time.Time `json:"created"`
@@ -26,7 +21,7 @@ type RegisterRequest struct {
 	Name      string `json:"name"`
 	Password  string `json:"password"`
 	Gender    string `json:"gender"`
-	Age       string `json:"age"`
+	Age       int    `json:"age"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Ctx       context.Context

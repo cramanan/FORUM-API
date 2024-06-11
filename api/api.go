@@ -105,7 +105,7 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 		registerReq.Name == "" ||
 		registerReq.Password == "" ||
 		registerReq.Gender == "" ||
-		registerReq.Age == "" ||
+		registerReq.Age <= 0 ||
 		registerReq.FirstName == "" ||
 		registerReq.LastName == "" {
 
@@ -114,10 +114,6 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 
 	if _, err = mail.ParseAddress(registerReq.Email); err != nil {
 		return writeJSON(writer, http.StatusBadRequest, "Invalid Email")
-	}
-
-	if _, err = strconv.Atoi(registerReq.Age); err != nil {
-		return writeJSON(writer, http.StatusBadRequest, "Age field is invalid")
 	}
 
 	var cancel context.CancelFunc
@@ -174,18 +170,18 @@ func (server *API) GetUsers(writer http.ResponseWriter, request *http.Request) e
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 
-	// Factor this
-	params := models.QueryParams{
-		Limit:  -1,
-		Offset: 0,
-	}
-	err := json.NewDecoder(request.Body).Decode(&params)
-	if err != nil {
-		return err
-	}
-	// Factor this ^
+	params := request.URL.Query()
+	var limit, offset int = -1, 0
 
-	users, err := server.Storage.GetUsers(ctx, params)
+	if _, ok := params["limit"]; ok {
+		limit, _ = strconv.Atoi(params.Get("limit"))
+	}
+
+	if _, ok := params["offset"]; ok {
+		offset, _ = strconv.Atoi(params.Get("offset"))
+	}
+
+	users, err := server.Storage.GetUsers(ctx, limit, offset)
 	if err != nil {
 		return err
 	}
@@ -241,16 +237,17 @@ func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) e
 	defer cancel()
 
 	// Factor this
-	params := models.QueryParams{
-		Limit:  -1,
-		Offset: 0,
-	}
-	err := json.NewDecoder(request.Body).Decode(&params)
-	if err != nil {
-		return err
+	params := request.URL.Query()
+	var limit, offset int = -1, 0
+	if _, ok := params["limit"]; ok {
+		limit, _ = strconv.Atoi(params.Get("limit"))
 	}
 
-	posts, err := server.Storage.GetPosts(ctx, params)
+	if _, ok := params["offset"]; ok {
+		offset, _ = strconv.Atoi(params.Get("offset"))
+	}
+
+	posts, err := server.Storage.GetPosts(ctx, limit, offset)
 	if err != nil {
 		return err
 	}
@@ -298,16 +295,17 @@ func (server *API) GetComments(writer http.ResponseWriter, request *http.Request
 	defer cancel()
 
 	// Factor this
-	params := models.QueryParams{
-		Limit:  -1,
-		Offset: 0,
-	}
-	err := json.NewDecoder(request.Body).Decode(&params)
-	if err != nil {
-		return err
+	params := request.URL.Query()
+	var limit, offset int = -1, 0
+	if _, ok := params["limit"]; ok {
+		limit, _ = strconv.Atoi(params.Get("limit"))
 	}
 
-	comments, err := server.Storage.GetComments(ctx, params)
+	if _, ok := params["offset"]; ok {
+		offset, _ = strconv.Atoi(params.Get("offset"))
+	}
+
+	comments, err := server.Storage.GetComments(ctx, limit, offset)
 	if err != nil {
 		return err
 	}
