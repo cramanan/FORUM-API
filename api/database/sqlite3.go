@@ -61,7 +61,36 @@ func NewSqlite3Store() (*Sqlite3Store, error) {
 	}, nil
 }
 
+var ErrConflict = errors.New("Conflict")
+
 func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.User, error) {
+	tx, err := store.db.BeginTx(req.Ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var exists bool
+	err = tx.QueryRowContext(req.Ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)", req.Email).Scan(&exists)
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, ErrConflict
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err = store.db.BeginTx(req.Ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	id, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
@@ -71,12 +100,6 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (*models.Us
 	if err != nil {
 		return nil, err
 	}
-
-	tx, err := store.db.BeginTx(req.Ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
 
 	user := &models.User{
 		ID:        id.String(),
@@ -151,13 +174,15 @@ func (store *Sqlite3Store) LogUser(req *models.LoginRequest) (*models.User, erro
 	return user, nil
 }
 
-func (store *Sqlite3Store) GetUsers(ctx context.Context) ([]*models.User, error) {
+func (store *Sqlite3Store) GetUsers(ctx context.Context, params models.QueryParams) ([]*models.User, error) {
 	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
-	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, gender, age, first_name , last_name, created FROM users;")
+	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, gender, age, first_name , last_name, created FROM users LIMIT ? OFFSET ?;",
+		params.Limit,
+		params.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +258,7 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 	return post, nil
 }
 
-func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error) {
+func (store *Sqlite3Store) GetPosts(ctx context.Context, params models.QueryParams) ([]*models.Post, error) {
 	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
@@ -242,7 +267,10 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error)
 
 	rows, err := tx.QueryContext(ctx,
 		`SELECT posts.id, users.id, users.name, posts.categories, posts.content, posts.created 
-			FROM posts JOIN users ON posts.userid = users.id;`)
+			FROM posts JOIN users ON posts.userid = users.id LIMIT ? OFFSET ?;`,
+		params.Limit,
+		params.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -346,14 +374,17 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (*models.Co
 	return comment, nil
 }
 
-func (store *Sqlite3Store) GetComments(ctx context.Context) ([]*models.Comment, error) {
+func (store *Sqlite3Store) GetComments(ctx context.Context, params models.QueryParams) ([]*models.Comment, error) {
 	tx, err := store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	rows, err := tx.QueryContext(ctx, "SELECT * FROM comments;")
+	rows, err := tx.QueryContext(ctx, "SELECT * FROM comments LIMIT ? OFFSET ?;",
+		params.Limit,
+		params.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+type QueryParams struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
 type User struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/mail"
 	"real-time-forum/api/database"
@@ -123,6 +124,9 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 	registerReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 	user, err := server.Storage.RegisterUser(registerReq)
+	if errors.Is(err, database.ErrConflict) {
+		return writeJSON(writer, http.StatusConflict, "Email already taken")
+	}
 	if err != nil {
 		return err
 	}
@@ -170,7 +174,18 @@ func (server *API) GetUsers(writer http.ResponseWriter, request *http.Request) e
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 
-	users, err := server.Storage.GetUsers(ctx)
+	// Factor this
+	params := models.QueryParams{
+		Limit:  -1,
+		Offset: 0,
+	}
+	err := json.NewDecoder(request.Body).Decode(&params)
+	if err != nil {
+		return err
+	}
+	// Factor this ^
+
+	users, err := server.Storage.GetUsers(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -224,7 +239,18 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
-	posts, err := server.Storage.GetPosts(ctx)
+
+	// Factor this
+	params := models.QueryParams{
+		Limit:  -1,
+		Offset: 0,
+	}
+	err := json.NewDecoder(request.Body).Decode(&params)
+	if err != nil {
+		return err
+	}
+
+	posts, err := server.Storage.GetPosts(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -270,7 +296,18 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 func (server *API) GetComments(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
-	comments, err := server.Storage.GetComments(ctx)
+
+	// Factor this
+	params := models.QueryParams{
+		Limit:  -1,
+		Offset: 0,
+	}
+	err := json.NewDecoder(request.Body).Decode(&params)
+	if err != nil {
+		return err
+	}
+
+	comments, err := server.Storage.GetComments(ctx, params)
 	if err != nil {
 		return err
 	}
