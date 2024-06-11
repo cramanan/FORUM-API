@@ -195,6 +195,10 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, er
 	}
 	defer tx.Rollback()
 
+	if req.Categories == nil {
+		req.Categories = make([]string, 0)
+	}
+
 	post := &models.Post{
 		ID:         string(id),
 		UserID:     req.UserID,
@@ -260,6 +264,10 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error)
 		err = json.Unmarshal(byteCategories, &post.Categories)
 		if err != nil {
 			return nil, err
+		}
+
+		if post.Categories == nil {
+			post.Categories = make([]string, 0)
 		}
 
 		posts = append(posts, post)
