@@ -28,14 +28,15 @@ func NewAPI(addr string) (*API, error) {
 	})
 	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	router.HandleFunc("/api/", server.Protected((server.ReadSession)))
+	router.HandleFunc("/api/", server.Protected(server.ReadSession))
 
 	router.HandleFunc("/api/register", HandleFunc(server.Register))
 	router.HandleFunc("/api/login", HandleFunc(server.Login))
 
-	router.HandleFunc("/api/users", server.Protected((server.GetUsers)))
-	router.HandleFunc("/api/posts", server.Protected((server.GetPosts)))
-	router.HandleFunc("/api/post", server.Protected((server.Post)))
+	router.HandleFunc("/api/users", server.Protected(server.GetUsers))
+	router.HandleFunc("/api/posts", server.Protected(server.GetPosts))
+	router.HandleFunc("/api/post", server.Protected(server.Post))
+	router.HandleFunc("/api/comment", server.Protected(server.Comment))
 
 	// server.Upgrader = websocket.Upgrader{
 	// 	ReadBufferSize:  1024,
@@ -228,6 +229,41 @@ func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) e
 	}
 
 	return writeJSON(writer, http.StatusOK, posts)
+}
+
+func (server *API) Comment(writer http.ResponseWriter, request *http.Request) error {
+	if request.Method != http.MethodPost {
+		return writeJSON(writer, http.StatusMethodNotAllowed, "Method Not Allowed")
+	}
+
+	commentReq := new(models.CommentRequest)
+	err := json.NewDecoder(request.Body).Decode(commentReq)
+	if err != nil {
+		return err
+	}
+
+	if commentReq.Content == "" ||
+		commentReq.PostID == "" {
+
+		return writeJSON(writer, http.StatusBadRequest, "Missing Credentials")
+	}
+
+	session, err := server.Sessions.GetSession(request)
+	if err != nil {
+		return err
+	}
+
+	commentReq.UserID = session.User.ID
+	var cancel context.CancelFunc
+	commentReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
+
+	comment, err := server.Storage.CreateComment(commentReq)
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(writer, http.StatusOK, comment)
 }
 
 // func (server *API) WS(writer http.ResponseWriter, request *http.Request) error {

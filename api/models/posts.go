@@ -15,9 +15,9 @@ type Post struct {
 }
 
 type PostRequest struct {
-	Content    string   `json:"content"`
-	UserID     string   `json:"userID"`
-	Username   string   `json:"username"`
+	Content    string `json:"content"`
+	UserID     string
+	Username   string
 	Categories []string `json:"categories"`
 	Ctx        context.Context
 }

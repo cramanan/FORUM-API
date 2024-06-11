@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"math/rand"
+	"errors"
 	"real-time-forum/api/models"
 	"time"
 
@@ -41,6 +41,14 @@ func NewSqlite3Store() (*Sqlite3Store, error) {
 		id TEXT PRIMARY KEY,
 		userid TEXT REFERENCES users(id),
 		categories BLOB,
+		content TEXT,
+		created DATE
+	);
+	
+	CREATE TABLE IF NOT EXISTS comments (
+		id TEXT PRIMARY KEY,
+		postid TEXT REFERENCES posts(id),
+		userid TEXT REFERENCES users(id),
 		content TEXT,
 		created DATE
 	);`)
@@ -183,12 +191,7 @@ func (store *Sqlite3Store) GetUsers(ctx context.Context) ([]*models.User, error)
 }
 
 func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (*models.Post, error) {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-")
-	id := make([]rune, 5)
-	for i := range id {
-		id[i] = letters[rand.Intn(len(letters))]
-	}
-
+	id := generateBase64ID(5)
 	tx, err := store.db.BeginTx(req.Ctx, nil)
 	if err != nil {
 		return nil, err
@@ -278,4 +281,67 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context) ([]*models.Post, error)
 	}
 
 	return posts, nil
+}
+
+func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (*models.Comment, error) {
+	tx, err := store.db.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var postExists, userExists bool
+	err = tx.QueryRowContext(req.Ctx,
+		`SELECT
+			EXISTS (SELECT 1 FROM posts WHERE id = ?),
+    		EXISTS (SELECT 1 FROM users WHERE id = ?);`,
+		req.PostID,
+		req.UserID).Scan(&postExists, &userExists)
+	if err != nil {
+		return nil, err
+	}
+
+	if !postExists {
+		return nil, errors.New("post not found")
+	}
+	if !userExists {
+		return nil, errors.New("user not found")
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err = store.db.BeginTx(req.Ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	comment := &models.Comment{
+		ID:      generateBase64ID(6),
+		PostID:  req.PostID,
+		UserID:  req.UserID,
+		Content: req.Content,
+		Created: time.Now(),
+	}
+
+	_, err = tx.ExecContext(req.Ctx, "INSERT INTO comments VALUES (?, ?, ?, ?, ?);",
+		comment.ID,
+		comment.PostID,
+		comment.UserID,
+		comment.Content,
+		comment.Created,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return comment, nil
 }
