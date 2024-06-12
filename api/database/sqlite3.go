@@ -261,6 +261,41 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context, limit, offset int) (pos
 	return posts, tx.Commit()
 }
 
+func (store *Sqlite3Store) GetPostByID(ctx context.Context, id string) (*models.Post, error) {
+	tx, err := store.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	post := new(models.Post)
+	byteCategories := []byte{}
+	err = tx.QueryRowContext(ctx,
+		`SELECT posts.id, users.id, users.name, posts.categories, posts.content, posts.created 
+			FROM posts JOIN users ON posts.userid = users.id WHERE posts.id = ?;`,
+		id).Scan(
+		&post.ID,
+		&post.UserID,
+		&post.Username,
+		&byteCategories,
+		&post.Content,
+		&post.Created,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(byteCategories, &post.Categories)
+	if err != nil {
+		return nil, err
+	}
+
+	if post.Categories == nil {
+		post.Categories = make([]string, 0)
+	}
+
+	return post, tx.Commit()
+}
+
 func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (comment models.Comment, err error) {
 	tx, err := store.BeginTx(req.Ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {

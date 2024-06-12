@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/mail"
 	"real-time-forum/api/database"
@@ -29,11 +31,6 @@ func NewAPI(addr string) (*API, error) {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { // Frontend setup
-		http.ServeFile(w, r, "static/index.html")
-	})
-	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
 	router.HandleFunc("/api/", server.Protected(server.ReadSession))
 
 	router.HandleFunc("/api/register", HandleFunc(server.Register))
@@ -43,8 +40,14 @@ func NewAPI(addr string) (*API, error) {
 	router.HandleFunc("/api/users", server.Protected(server.GetUsers))
 	router.HandleFunc("/api/posts", server.Protected(server.GetPosts))
 	router.HandleFunc("/api/post", server.Protected(server.Post))
+	router.HandleFunc("/api/post/{id}", server.Protected(server.GetPostByID))
 	router.HandleFunc("/api/comment", server.Protected(server.Comment))
 	router.HandleFunc("/api/comments", server.Protected(server.GetComments))
+
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { // Frontend setup
+		http.ServeFile(w, r, "static/index.html")
+	})
+	router.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	server.Server.Handler = router
 
@@ -419,4 +422,26 @@ func (server *API) Logout(writer http.ResponseWriter, request *http.Request) err
 	}
 
 	return writeJSON(writer, http.StatusOK, "Session ended.")
+}
+
+func (server *API) GetPostByID(writer http.ResponseWriter, request *http.Request) error {
+	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
+
+	log.Println(request.PathValue("id"))
+	post, err := server.Storage.GetPostByID(ctx, request.PathValue("id"))
+	if errors.Is(err, sql.ErrNoRows) {
+		return writeJSON(writer, http.StatusNotFound,
+			APIerror{
+				Status:  http.StatusNotFound,
+				Error:   "Not Found",
+				Message: "Post not found",
+			})
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(writer, http.StatusOK, post)
 }
