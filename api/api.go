@@ -38,6 +38,7 @@ func NewAPI(addr string) (*API, error) {
 
 	router.HandleFunc("/api/register", HandleFunc(server.Register))
 	router.HandleFunc("/api/login", HandleFunc(server.Login))
+	router.HandleFunc("/api/logout", server.Protected(server.Logout))
 
 	router.HandleFunc("/api/users", server.Protected(server.GetUsers))
 	router.HandleFunc("/api/posts", server.Protected(server.GetPosts))
@@ -320,7 +321,7 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 		return err
 	}
 
-	return writeJSON(writer, http.StatusOK, post)
+	return writeJSON(writer, http.StatusCreated, post)
 }
 
 func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) error {
@@ -409,4 +410,13 @@ func (server *API) GetComments(writer http.ResponseWriter, request *http.Request
 	}
 
 	return writeJSON(writer, http.StatusOK, comments)
+}
+
+func (server *API) Logout(writer http.ResponseWriter, request *http.Request) error {
+	err := server.Sessions.EndSession(request)
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(writer, http.StatusOK, "Session ended.")
 }

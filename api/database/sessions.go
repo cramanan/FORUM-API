@@ -79,3 +79,15 @@ func (store *SessionStore) GetSession(r *http.Request) (s *Session, err error) {
 	}
 	return s, nil
 }
+
+func (store *SessionStore) EndSession(r *http.Request) error {
+	session, err := store.GetSession(r)
+	if err != nil {
+		return err
+	}
+
+	store.mx.Lock()
+	delete(store.sessions, session.ID)
+	store.mx.Unlock()
+	return nil
+}
