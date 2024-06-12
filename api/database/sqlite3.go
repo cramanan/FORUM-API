@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"os"
 	"real-time-forum/api/models"
 	"time"
@@ -19,6 +20,15 @@ const TransactionTimeout = 3 * time.Second
 var ErrConflict = errors.New("Conflict")
 
 type Sqlite3Store struct{ *sql.DB }
+
+func GenerateB64(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-")
+	id := make([]rune, n)
+	for i := range id {
+		id[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(id)
+}
 
 func NewSqlite3Store() (*Sqlite3Store, error) {
 	db, err := sql.Open("sqlite3", "api/database/database.sqlite")
@@ -35,7 +45,6 @@ func NewSqlite3Store() (*Sqlite3Store, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &Sqlite3Store{db}, nil
 }
 
@@ -180,7 +189,7 @@ func (store *Sqlite3Store) CreatePost(req *models.PostRequest) (post models.Post
 		req.Categories = make([]string, 0)
 	}
 
-	post.ID = generateBase64ID(5)
+	post.ID = GenerateB64(5)
 	post.UserID = req.UserID
 	post.Username = req.Username
 	post.Categories = req.Categories
@@ -289,7 +298,7 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (comment mo
 	defer tx.Rollback()
 
 	comment = models.Comment{
-		ID:      generateBase64ID(6),
+		ID:      GenerateB64(5),
 		PostID:  req.PostID,
 		UserID:  req.UserID,
 		Content: req.Content,
