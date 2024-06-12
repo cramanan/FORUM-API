@@ -15,7 +15,6 @@ type API struct {
 	http.Server
 	Storage  *database.Sqlite3Store
 	Sessions *database.SessionStore
-	// Upgrader websocket.Upgrader
 }
 
 func NewAPI(addr string) (*API, error) {
@@ -40,15 +39,6 @@ func NewAPI(addr string) (*API, error) {
 	router.HandleFunc("/api/comment", server.Protected(server.Comment))
 	router.HandleFunc("/api/comments", server.Protected(server.GetComments))
 
-	// server.Upgrader = websocket.Upgrader{
-	// 	ReadBufferSize:  1024,
-	// 	WriteBufferSize: 1024,
-	// 	CheckOrigin: func(r *http.Request) bool {
-	// 		return true
-	// 	},
-	// }
-	// router.HandleFunc("/api/ws", (HandleFunc(server.WS)))
-
 	server.Server.Handler = router
 
 	storage, err := database.NewSqlite3Store()
@@ -59,6 +49,18 @@ func NewAPI(addr string) (*API, error) {
 	server.Storage = storage
 	server.Sessions = database.NewSessionStore()
 	return server, nil
+}
+
+func parseRequestLimitAndOffset(request *http.Request) (limit, offset int) {
+	params := request.URL.Query()
+
+	limit, _ = strconv.Atoi(params.Get("limit"))
+	if limit <= 0 {
+		limit = -1
+	}
+
+	offset, _ = strconv.Atoi(params.Get("offset"))
+	return limit, offset
 }
 
 func writeJSON(writer http.ResponseWriter, statusCode int, v any) error {
@@ -169,23 +171,11 @@ func (server *API) Login(writer http.ResponseWriter, request *http.Request) erro
 func (server *API) GetUsers(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
-
-	params := request.URL.Query()
-	var limit, offset int = -1, 0
-
-	if _, ok := params["limit"]; ok {
-		limit, _ = strconv.Atoi(params.Get("limit"))
-	}
-
-	if _, ok := params["offset"]; ok {
-		offset, _ = strconv.Atoi(params.Get("offset"))
-	}
-
+	limit, offset := parseRequestLimitAndOffset(request)
 	users, err := server.Storage.GetUsers(ctx, limit, offset)
 	if err != nil {
 		return err
 	}
-
 	return writeJSON(writer, http.StatusOK, users)
 }
 
@@ -194,7 +184,6 @@ func (server *API) ReadSession(writer http.ResponseWriter, request *http.Request
 	if err != nil {
 		return err
 	}
-
 	return writeJSON(writer, http.StatusOK, session.User)
 }
 
@@ -215,11 +204,12 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 
 	session, err := server.Sessions.GetSession(request)
 	if err != nil {
-		return err
+		return writeJSON(writer, http.StatusServiceUnavailable, "Couldn't retrieve the active session")
 	}
 
 	postReq.UserID = session.User.ID
 	postReq.Username = session.User.Name
+
 	var cancel context.CancelFunc
 	postReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
@@ -236,17 +226,7 @@ func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) e
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 
-	// Factor this
-	params := request.URL.Query()
-	var limit, offset int = -1, 0
-	if _, ok := params["limit"]; ok {
-		limit, _ = strconv.Atoi(params.Get("limit"))
-	}
-
-	if _, ok := params["offset"]; ok {
-		offset, _ = strconv.Atoi(params.Get("offset"))
-	}
-
+	limit, offset := parseRequestLimitAndOffset(request)
 	posts, err := server.Storage.GetPosts(ctx, limit, offset)
 	if err != nil {
 		return err
@@ -266,18 +246,16 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 		return err
 	}
 
-	if commentReq.Content == "" ||
-		commentReq.PostID == "" {
-
-		return writeJSON(writer, http.StatusBadRequest, "Missing Credentials")
+	if commentReq.Content == "" || commentReq.PostID == "" {
+		return writeJSON(writer, http.StatusBadRequest, "Missing Information")
 	}
 
 	session, err := server.Sessions.GetSession(request)
 	if err != nil {
 		return err
 	}
-
 	commentReq.UserID = session.User.ID
+
 	var cancel context.CancelFunc
 	commentReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
@@ -294,17 +272,7 @@ func (server *API) GetComments(writer http.ResponseWriter, request *http.Request
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 
-	// Factor this
-	params := request.URL.Query()
-	var limit, offset int = -1, 0
-	if _, ok := params["limit"]; ok {
-		limit, _ = strconv.Atoi(params.Get("limit"))
-	}
-
-	if _, ok := params["offset"]; ok {
-		offset, _ = strconv.Atoi(params.Get("offset"))
-	}
-
+	limit, offset := parseRequestLimitAndOffset(request)
 	comments, err := server.Storage.GetComments(ctx, limit, offset)
 	if err != nil {
 		return err
@@ -312,12 +280,3 @@ func (server *API) GetComments(writer http.ResponseWriter, request *http.Request
 
 	return writeJSON(writer, http.StatusOK, comments)
 }
-
-// func (server *API) WS(writer http.ResponseWriter, request *http.Request) error {
-// 	conn, err := server.Upgrader.Upgrade(writer, request, nil)
-// 	if err != nil {
-// 		return writeJSON(writer, http.StatusInternalServerError, "Error: connecting to the WebSocket.")
-// 	}
-// 	conn.Close()
-// 	return nil
-// }
