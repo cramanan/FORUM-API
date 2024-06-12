@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -41,8 +40,8 @@ func NewAPI(addr string) (*API, error) {
 	router.HandleFunc("/api/posts", server.Protected(server.GetPosts))
 	router.HandleFunc("/api/post", server.Protected(server.Post))
 	router.HandleFunc("/api/post/{id}", server.Protected(server.GetPostByID))
-	router.HandleFunc("/api/comment", server.Protected(server.Comment))
-	router.HandleFunc("/api/comments/{id}", server.Protected(server.GetCommentsByID))
+	router.HandleFunc("/api/post/{id}/comment", server.Protected(server.Comment))
+	router.HandleFunc("/api/post/{id}/comments", server.Protected(server.GetCommentsOfID))
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { // Frontend setup
 		http.ServeFile(w, r, "static/index.html")
@@ -111,7 +110,7 @@ func (server *API) Protected(fn HandlerFunc) http.HandlerFunc {
 				APIerror{
 					Status:  http.StatusInternalServerError,
 					Error:   "Internal Server Error",
-					Message: "Something went Wrong :/",
+					Message: err.Error(),
 				})
 		}
 	})
@@ -243,6 +242,15 @@ func (server *API) Login(writer http.ResponseWriter, request *http.Request) erro
 	return writeJSON(writer, http.StatusOK, user)
 }
 
+func (server *API) Logout(writer http.ResponseWriter, request *http.Request) error {
+	err := server.Sessions.EndSession(request)
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(writer, http.StatusOK, "Session ended.")
+}
+
 func (server *API) GetUsers(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
@@ -327,6 +335,18 @@ func (server *API) Post(writer http.ResponseWriter, request *http.Request) error
 	return writeJSON(writer, http.StatusCreated, post)
 }
 
+func (server *API) GetPostByID(writer http.ResponseWriter, request *http.Request) error {
+	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
+	defer cancel()
+
+	post, err := server.Storage.GetPostByID(ctx, request.PathValue("id"))
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(writer, http.StatusOK, post)
+}
+
 func (server *API) GetPosts(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
@@ -370,15 +390,6 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 			})
 	}
 
-	if commentReq.PostID == "" {
-		return writeJSON(writer, http.StatusBadRequest,
-			APIerror{
-				Status:  http.StatusBadRequest,
-				Error:   "Status Bad Request",
-				Message: "postid field is required",
-			})
-	}
-
 	session, err := server.Sessions.GetSession(request)
 	if err != nil {
 		return writeJSON(writer, http.StatusInternalServerError,
@@ -389,6 +400,7 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 			})
 	}
 	commentReq.UserID = session.User.ID
+	commentReq.PostID = request.PathValue("id")
 
 	var cancel context.CancelFunc
 	commentReq.Ctx, cancel = context.WithTimeout(request.Context(), database.TransactionTimeout)
@@ -403,46 +415,14 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 	return writeJSON(writer, http.StatusOK, comment)
 }
 
-func (server *API) GetCommentsByID(writer http.ResponseWriter, request *http.Request) error {
+func (server *API) GetCommentsOfID(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
-
 	limit, offset := parseRequestLimitAndOffset(request)
-	comments, err := server.Storage.GetCommentsByID(ctx, request.PathValue("id"), limit, offset)
+
+	comments, err := server.Storage.GetCommentsOfID(ctx, request.PathValue("id"), limit, offset)
 	if err != nil {
 		return err
 	}
-
 	return writeJSON(writer, http.StatusOK, comments)
-}
-
-func (server *API) Logout(writer http.ResponseWriter, request *http.Request) error {
-	err := server.Sessions.EndSession(request)
-	if err != nil {
-		return err
-	}
-
-	return writeJSON(writer, http.StatusOK, "Session ended.")
-}
-
-func (server *API) GetPostByID(writer http.ResponseWriter, request *http.Request) error {
-	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
-	defer cancel()
-
-	log.Println(request.PathValue("id"))
-	post, err := server.Storage.GetPostByID(ctx, request.PathValue("id"))
-	if errors.Is(err, sql.ErrNoRows) {
-		return writeJSON(writer, http.StatusNotFound,
-			APIerror{
-				Status:  http.StatusNotFound,
-				Error:   "Not Found",
-				Message: "Post not found",
-			})
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return writeJSON(writer, http.StatusOK, post)
 }

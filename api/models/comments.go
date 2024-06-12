@@ -15,7 +15,7 @@ type Comment struct {
 
 type CommentRequest struct {
 	UserID  string
-	PostID  string `json:"postid"`
+	PostID  string
 	Content string `json:"content"`
 	Ctx     context.Context
 }
