@@ -171,7 +171,7 @@ func (store *Sqlite3Store) GetUsers(ctx context.Context, limit, offset int) (use
 			&user.Created,
 		)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		users = append(users, user)
 	}
