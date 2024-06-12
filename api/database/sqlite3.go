@@ -353,14 +353,20 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (comment mo
 	return comment, tx.Commit()
 }
 
-func (store *Sqlite3Store) GetComments(ctx context.Context, limit, offset int) (comments []models.Comment, err error) {
+func (store *Sqlite3Store) GetCommentsByID(ctx context.Context, id string, limit, offset int) (comments []models.Comment, err error) {
 	tx, err := store.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
-
-	rows, err := tx.QueryContext(ctx, "SELECT * FROM comments LIMIT ? OFFSET ?;",
+	comments = []models.Comment{}
+	rows, err := tx.QueryContext(ctx,
+		`SELECT comments.id, comments.postid, comments.userid, comments.content, comments.created  
+		FROM comments 
+		JOIN posts
+		ON comments.postid = posts.id
+		WHERE posts.id = ? LIMIT ? OFFSET ?;`,
+		id,
 		limit,
 		offset,
 	)

@@ -42,7 +42,7 @@ func NewAPI(addr string) (*API, error) {
 	router.HandleFunc("/api/post", server.Protected(server.Post))
 	router.HandleFunc("/api/post/{id}", server.Protected(server.GetPostByID))
 	router.HandleFunc("/api/comment", server.Protected(server.Comment))
-	router.HandleFunc("/api/comments", server.Protected(server.GetComments))
+	router.HandleFunc("/api/comments/{id}", server.Protected(server.GetCommentsByID))
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { // Frontend setup
 		http.ServeFile(w, r, "static/index.html")
@@ -396,18 +396,19 @@ func (server *API) Comment(writer http.ResponseWriter, request *http.Request) er
 
 	comment, err := server.Storage.CreateComment(commentReq)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	return writeJSON(writer, http.StatusOK, comment)
 }
 
-func (server *API) GetComments(writer http.ResponseWriter, request *http.Request) error {
+func (server *API) GetCommentsByID(writer http.ResponseWriter, request *http.Request) error {
 	ctx, cancel := context.WithTimeout(request.Context(), database.TransactionTimeout)
 	defer cancel()
 
 	limit, offset := parseRequestLimitAndOffset(request)
-	comments, err := server.Storage.GetComments(ctx, limit, offset)
+	comments, err := server.Storage.GetCommentsByID(ctx, request.PathValue("id"), limit, offset)
 	if err != nil {
 		return err
 	}
