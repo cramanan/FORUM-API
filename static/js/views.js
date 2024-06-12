@@ -173,7 +173,7 @@ class Home extends View {
 
   async bindListeners() {
     const username = document.getElementById("username");
-    username.textContent = await fetch(`http://${APIendpoint}/`)
+    username.textContent = await fetch(`http://${APIendpoint}/auth`)
       .then((resp) => resp.json())
       .then((v) => v.name);
 
@@ -215,7 +215,7 @@ class Home extends View {
   async fetchPosts() {
     const postsHTML = [];
     try {
-      const response = await fetch(`http://${APIendpoint}/posts`);
+      const response = await fetch(`http://${APIendpoint}/posts?limit=10`);
       const datas = await response.json();
       datas.forEach((post) => {
         // create elements to avoid injections
@@ -266,7 +266,7 @@ class Profile extends View {
   }
 
   async getHtml() {
-    const info = await fetch(`http://${APIendpoint}/`).then((resp) =>
+    const info = await fetch(`http://${APIendpoint}/auth`).then((resp) =>
       resp.json()
     );
     return `

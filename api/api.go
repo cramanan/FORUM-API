@@ -30,7 +30,7 @@ func NewAPI(addr string) (*API, error) {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("/api/", server.Protected(server.ReadSession))
+	router.HandleFunc("/api/auth", server.Protected(server.ReadSession))
 
 	router.HandleFunc("/api/register", HandleFunc(server.Register))
 	router.HandleFunc("/api/login", HandleFunc(server.Login))
@@ -141,7 +141,7 @@ func (server *API) Register(writer http.ResponseWriter, request *http.Request) e
 		registerReq.Name == "" ||
 		registerReq.Password == "" ||
 		registerReq.Gender == "" ||
-		registerReq.Age <= 0 ||
+		registerReq.Age == "" ||
 		registerReq.FirstName == "" ||
 		registerReq.LastName == "" {
 

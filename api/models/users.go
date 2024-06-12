@@ -10,7 +10,7 @@ type User struct {
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	Gender    string    `json:"gender"`
-	Age       int       `json:"age"`
+	Age       string    `json:"age"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Created   time.Time `json:"created"`
@@ -21,7 +21,7 @@ type RegisterRequest struct {
 	Name      string `json:"name"`
 	Password  string `json:"password"`
 	Gender    string `json:"gender"`
-	Age       int    `json:"age"`
+	Age       string `json:"age"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Ctx       context.Context

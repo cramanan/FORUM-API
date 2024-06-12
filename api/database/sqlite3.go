@@ -90,7 +90,7 @@ func (store *Sqlite3Store) RegisterUser(req *models.RegisterRequest) (user model
 	user.Email = req.Email
 	user.Name = req.Name
 	user.Gender = req.Gender
-	user.Age = req.Age
+	user.Age = (req.Age)
 	user.FirstName = req.FirstName
 	user.LastName = req.LastName
 	user.Created = time.Now().UTC()
