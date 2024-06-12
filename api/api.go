@@ -61,7 +61,7 @@ func parseRequestLimitAndOffset(request *http.Request) (limit, offset int) {
 	params := request.URL.Query()
 
 	limit, _ = strconv.Atoi(params.Get("limit"))
-	if limit <= 0 {
+	if limit == 0 {
 		limit = -1
 	}
 
