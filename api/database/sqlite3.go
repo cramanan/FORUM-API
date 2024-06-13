@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"math/rand"
 	"os"
 	"real-time-forum/api/models"
@@ -151,7 +152,7 @@ func (store *Sqlite3Store) GetUsers(ctx context.Context, limit, offset int) (use
 		return nil, err
 	}
 	defer tx.Rollback()
-	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, gender, age, first_name, last_name, created FROM users LIMIT ? OFFSET ?;",
+	rows, err := tx.QueryContext(ctx, "SELECT id, email, name, gender, age, first_name, last_name, created FROM users ORDER BY created LIMIT ? OFFSET ?;",
 		limit,
 		offset)
 	if err != nil {
@@ -223,7 +224,7 @@ func (store *Sqlite3Store) GetPosts(ctx context.Context, limit, offset int) (pos
 
 	rows, err := tx.QueryContext(ctx,
 		`SELECT posts.id, users.id, users.name, posts.categories, posts.content, posts.created 
-			FROM posts JOIN users ON posts.userid = users.id LIMIT ? OFFSET ?;`,
+			FROM posts JOIN users ON posts.userid = users.id ORDER BY posts.created DESC LIMIT ? OFFSET ?;`,
 		limit,
 		offset,
 	)
@@ -355,6 +356,7 @@ func (store *Sqlite3Store) CreateComment(req *models.CommentRequest) (comment mo
 
 func (store *Sqlite3Store) GetCommentsOfID(ctx context.Context, id string, limit, offset int) (comments []models.Comment, err error) {
 	comments = []models.Comment{}
+
 	tx, err := store.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
 	if err != nil {
 		return
@@ -375,6 +377,7 @@ func (store *Sqlite3Store) GetCommentsOfID(ctx context.Context, id string, limit
 			&comment.Created,
 		)
 		if err != nil {
+			log.Println(err)
 			continue
 		}
 

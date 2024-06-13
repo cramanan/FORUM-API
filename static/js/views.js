@@ -96,6 +96,7 @@ class Connect extends View {
   async HandleRegisterSubmit(event) {
     event.preventDefault();
     try {
+      const errorField = document.getElementById("register-server-error");
       const data = Object.fromEntries(new FormData(event.target).entries());
       const response = await fetch(`http://${APIendpoint}/register`, {
         credentials: "include",
@@ -107,10 +108,7 @@ class Connect extends View {
         body: JSON.stringify(data),
       });
       if (response.ok) navigateTo("/");
-      else {
-        document.getElementById("register-server-error").textContent =
-          await response.json();
-      }
+      else errorField.textContent = (await response.json()).message;
     } catch (reason) {
       console.log(reason);
     }
@@ -119,6 +117,7 @@ class Connect extends View {
   async HandleLoginSubmit(event) {
     event.preventDefault();
     try {
+      const errorField = document.getElementById("login-server-error");
       const data = Object.fromEntries(new FormData(event.target).entries());
       const response = await fetch(`http://${APIendpoint}/login`, {
         credentials: "include",
@@ -130,10 +129,7 @@ class Connect extends View {
         body: JSON.stringify(data),
       });
       if (response.ok) navigateTo("/");
-      else {
-        document.getElementById("login-server-error").textContent =
-          await response.json();
-      }
+      else errorField.textContent = (await response.json()).message;
     } catch (reason) {
       console.log(reason);
     }
@@ -215,6 +211,43 @@ class Home extends View {
   async fetchPosts() {
     const postsHTML = [];
     try {
+      const popup = {
+        div: document.createElement("div"),
+        id: "",
+      };
+      popup.div.className = "post-pop-up";
+      const body = document.createElement("div");
+      body.className = "_body";
+      const header = document.createElement("h2");
+      const content = document.createElement("p");
+      const comments = document.createElement("ul");
+      const commentForm = document.createElement("form");
+      popup.div.append(body);
+      body.append(header, content, commentForm, comments);
+
+      const createPopUp = (post) => {
+        return async () => {
+          document.getElementById("root").prepend(popup.div);
+          popup.id = post?.id;
+          header.textContent = post?.username;
+          content.textContent = post?.content;
+          commentForm.innerHTML = `<textarea name="content" id="content"></textarea><button type="submit">post comment</button>`;
+          commentForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const data = Object.fromEntries(
+              new FormData(event.target).entries()
+            );
+          });
+
+          comments.textContent = await fetch(
+            `http://${APIendpoint}/post/${post.id}/comments`
+          )
+            .then((resp) => resp.json())
+            .then((v) => v.map((o) => JSON.stringify(o)));
+          // popup.opened = true;
+        };
+      };
+
       const response = await fetch(`http://${APIendpoint}/posts?limit=10`);
       const datas = await response.json();
       datas.forEach((post) => {
@@ -228,6 +261,7 @@ class Home extends View {
         const date = document.createElement("div");
         date.textContent = new Date(post.created).toUTCString();
         div.append(h2, p, date);
+        div.addEventListener("click", createPopUp(post));
         postsHTML.push(div);
       });
     } catch (error) {
