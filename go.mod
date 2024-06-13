@@ -1,4 +1,4 @@
-module real-time-forum
+module github.com/forum-api
 
 go 1.22.3
 

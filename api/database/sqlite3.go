@@ -8,8 +8,9 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"real-time-forum/api/models"
 	"time"
+
+	"github.com/forum-api/api/models"
 
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"

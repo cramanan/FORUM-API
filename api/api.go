@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
-	"real-time-forum/api/database"
-	"real-time-forum/api/models"
 	"strconv"
+
+	"github.com/forum-api/api/database"
+	"github.com/forum-api/api/models"
 )
 
 type API struct {

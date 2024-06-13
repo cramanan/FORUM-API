@@ -3,6 +3,8 @@
 
 ...
 
+Warning: this is a project not a package
+
 ## Libraries used
 
 - For the Database:
@@ -64,7 +66,7 @@ Example:
 
 Request URL : http://localhost:8080/api/users
 
-Request Body:
+Response Body:
 ```json
     [
         {

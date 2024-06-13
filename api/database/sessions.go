@@ -4,9 +4,10 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"real-time-forum/api/models"
 	"sync"
 	"time"
+
+	"github.com/forum-api/api/models"
 )
 
 const (

@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"real-time-forum/api"
+
+	"github.com/forum-api/api"
 )
 
 func main() {
