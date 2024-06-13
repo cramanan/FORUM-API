@@ -1,6 +1,5 @@
 # Real-Time-Forum ⚡
-
-This project follows the [MVC](https://developer.mozilla.org/en-US/docs/Glossary/MVC) pattern as a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application).
+<sub>From [01-edu](https://github.com/01-edu/public) public course</sub>
 
 ...
 
