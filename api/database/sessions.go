@@ -2,8 +2,7 @@ package database
 
 import (
 	"errors"
-	"fmt"
-	"math/rand"
+	"log"
 	"net/http"
 	"real-time-forum/api/models"
 	"sync"
@@ -18,6 +17,7 @@ const (
 type SessionStore struct {
 	mx       sync.RWMutex
 	sessions map[string]*Session
+	timer    *time.Ticker
 }
 
 func NewSessionStore() *SessionStore {
@@ -28,40 +28,30 @@ func NewSessionStore() *SessionStore {
 }
 
 func (store *SessionStore) timeoutCycle() {
+	store.timer = time.NewTicker(session_timeout)
 	go func() {
-		for {
-			time.Sleep(session_timeout)
+		for range store.timer.C {
+			store.mx.Lock()
 			for key, sess := range store.sessions {
 				if sess.Expires.Before(time.Now()) {
-					store.mx.Lock()
+					log.Println("Deleted", key)
 					delete(store.sessions, key)
-					store.mx.Unlock()
-					fmt.Println("Deleted", key)
 				}
 			}
+			store.mx.Unlock()
 		}
 	}()
 }
 
-func generateBase64ID(lenght int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-")
-	s := make([]rune, lenght)
-	for i := range s {
-		s[i] = letters[rand.Intn(len(letters))]
-	}
-
-	return string(s)
-}
-
 type Session struct {
 	ID      string
-	User    *models.User
+	User    models.User
 	Expires time.Time
 }
 
 func (store *SessionStore) NewSession(w http.ResponseWriter, r *http.Request) *Session {
 	session := new(Session)
-	session.ID = generateBase64ID(16)
+	session.ID = GenerateB64(5)
 	cookie := http.Cookie{
 		Name:     cookie_name,
 		Value:    session.ID,
@@ -88,4 +78,16 @@ func (store *SessionStore) GetSession(r *http.Request) (s *Session, err error) {
 		return nil, errors.New("no session found")
 	}
 	return s, nil
+}
+
+func (store *SessionStore) EndSession(r *http.Request) error {
+	session, err := store.GetSession(r)
+	if err != nil {
+		return err
+	}
+
+	store.mx.Lock()
+	delete(store.sessions, session.ID)
+	store.mx.Unlock()
+	return nil
 }
