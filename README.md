@@ -3,7 +3,7 @@
 
 ...
 
-Warning: this is a project not a package
+Note: this is a project not a package
 
 ## Libraries used
 
