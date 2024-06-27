@@ -3,7 +3,7 @@
 
 ...
 
-Note: this is a project not a package
+Note: This is a project not a package
 
 ## Libraries used
 
@@ -17,7 +17,7 @@ Note: this is a project not a package
 
 - For the HTTP Server:
     [net/http](https://pkg.go.dev/net/http) :
-    We created our own API type that inherits from Golang's http.Server. We implemented a built-in Session Storage and a DB Storage. [See API struct](/api/api.go)
+    I created my own API type that inherits from Golang's http.Server. I implemented a built-in Session Storage and a DB Storage. [See API struct](/api/api.go)
 
     [encoding/json](https://pkg.go.dev/encoding/json) : 
     The API only communicates in JSON. HTTP requests bodies are decoded from raw JSON and responses are encoded in JSON. [See examples](#the-api)
@@ -33,7 +33,7 @@ Note: this is a project not a package
     1. Install or Update to [Golang ^1.22](https://go.dev/doc/install)
     2. Download this project:
         ```
-        git clone https://zone01normandie.org/git/cramanan/real-time-forum
+        git clone https://github.com/cramanan/FORUM-API
         ```
     3. Download the dependencies:
         ```
@@ -44,7 +44,7 @@ Note: this is a project not a package
         go run .
         ```
 - ### Docker:
-    This project comes with a Dockerfile. You will need to run these commands (might need to run it as root):
+    This project comes with a Dockerfile. You will need to run these commands (you might need to run it as root):
     1. Build the image:
         ```
         docker image build -t <image-name> .
@@ -60,7 +60,7 @@ Note: this is a project not a package
         ```
 
 ## The API
-This API is fully written in Golang and its response are formatted in JSON using [Golang json package](https://pkg.go.dev/encoding/json):
+This API is fully written in Golang and its response are formatted in JSON:
 
 Example:
 
@@ -82,7 +82,9 @@ Response Body:
 
 A lot of endpoints are Protected so you will need to register / login first to open a Session and access the API.
 
-To send a register / login request, you must format it into JSON and allow cookies in order to open a session on the server:
+To register or login you can either:
+    - Open the connect page and fill the forms (allow cookies keep the session ID)
+    - Send an HTTP POST request with a raw JSON body
 
 The following fields are required by the auth endpoints:
 - Register endpoint:
@@ -94,9 +96,9 @@ The following fields are required by the auth endpoints:
         {
             "email" : "<example>@<address>.<any>",  
             "name" : "<example>",                   
-            "password": "<password>",               
-            "age" : "<number>", // as a string
-            "gender" : "<any>",                     
+            "password": "<password>",
+            "age" : "<number>",
+            "gender" : "<any>",
             "firstName" : "<example>",              
             "lastName" : "<example>"                
         }
