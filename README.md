@@ -83,8 +83,10 @@ Response Body:
 A lot of endpoints are Protected so you will need to register / login first to open a Session and access the API.
 
 To register or login you can either:
-    - Open the connect page and fill the forms (allow cookies keep the session ID)
-    - Send an HTTP POST request with a raw JSON body
+
+- Open the connect page and fill the forms (allow cookies keep the session ID)
+    
+- Send an HTTP POST request with a raw JSON body
 
 The following fields are required by the auth endpoints:
 - Register endpoint:
